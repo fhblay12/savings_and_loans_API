@@ -1,0 +1,6 @@
+fastapi
+starlette
+psycopg2
+plotly
+uvicorn
+sqlalchemy
