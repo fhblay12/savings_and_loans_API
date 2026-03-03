@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, AwareDatetime
 from datetime import date, timezone
+from pydantic import BaseModel, EmailStr
 
 class CustomerCreate(BaseModel):
     first_name: str
@@ -13,7 +14,10 @@ class CustomerCreate(BaseModel):
     credit_score: int
     customer_type: str
     password: str
-  
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
 
 class CustomerResponse(BaseModel):
     id: int
