@@ -16,5 +16,5 @@ def get_db():
 
 
 @router.post("/")
-def create_admin_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
+def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
     return create_customer(db, customer)

@@ -55,7 +55,7 @@ class Customer(Base):
 
     DOB: Mapped[Optional[datetime.date]] = mapped_column(Date)
     customer_type: Mapped[Optional[str]] = mapped_column(String)
-
+    password : Mapped[String]= mapped_column(String(255), nullable=False)
     employment_details: Mapped[list['EmploymentDetails']] = relationship(
         'EmploymentDetails', back_populates='customer'
     )

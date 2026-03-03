@@ -12,6 +12,7 @@ class CustomerCreate(BaseModel):
     DOB: date
     credit_score: int
     customer_type: str
+    password: str
   
 
 class CustomerResponse(BaseModel):
