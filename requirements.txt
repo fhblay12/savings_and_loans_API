@@ -4,3 +4,9 @@ psycopg2
 plotly
 uvicorn
 sqlalchemy
+psycopg2-binary
+sqlalchemy
+python-dotenv
+jinja2
+pydantic
+sqlacodegen
