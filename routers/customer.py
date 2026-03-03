@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.customer_schema import CustomerCreate
 from repositories.customer_repo import create_customer
-from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from models.models import Customer
 from schemas.customer_schema import LoginRequest
 from database import get_db
