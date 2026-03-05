@@ -54,7 +54,7 @@ class Token(BaseModel):
 def refresh_token_endpoint(refresh_token: str):
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
+        user_id = payload.get("sub") 
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
 

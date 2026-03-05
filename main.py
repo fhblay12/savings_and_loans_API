@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
-from routers import customer
+from routers import customer, employment_details
 from database import engine, Base
 
 app = FastAPI()
@@ -32,3 +32,4 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(customer.router)
+app.include_router(employment_details.router)

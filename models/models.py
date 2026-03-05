@@ -86,7 +86,7 @@ class EmploymentDetails(Base):
     )
 
     employment_details_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    customer_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(Integer, nullable=False)
     job_title: Mapped[str] = mapped_column(String, nullable=False)
     employment_type: Mapped[str] = mapped_column(String, nullable=False)        
     monthly_income: Mapped[int] = mapped_column(Integer, nullable=False)        
@@ -135,7 +135,7 @@ class SavingsAccount(Base):
     )
 
     account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    customer_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(Integer, nullable=False)
     balance: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
     admin_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
