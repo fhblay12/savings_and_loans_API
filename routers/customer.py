@@ -14,35 +14,33 @@ from jose import jwt
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
-
-
-
-
 @router.post("/")
 def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
     return create_customer(db, customer)
 
 @router.post("/login")
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    # Find user by email
-    user = db.query(Customer).filter(Customer.email == request.email).first()
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+
+    user = db.query(Customer).filter(Customer.email == form_data.username).first()
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
-    # Verify password
-    if not verify_password(request.password, user.password):
+    if not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
-    # Create JWT token
     token = create_access_token({"sub": user.email, "id": str(user.customer_id)})
-    return {"access_token": token, "token_type": "bearer"}
 
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
 
 
 class Token(BaseModel):

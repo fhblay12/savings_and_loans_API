@@ -36,7 +36,7 @@ def create_refresh_token(data: dict, expires_days: int = 7):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")  # token endpoint
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="customer/login")  # token endpoint
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     try:

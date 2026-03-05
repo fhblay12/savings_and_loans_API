@@ -1,7 +1,7 @@
 from typing import Optional
 import datetime
 import decimal
-
+from sqlalchemy.sql import func
 from sqlalchemy import ARRAY, BigInteger, Boolean, Date, DateTime, ForeignKeyConstraint, Integer, LargeBinary, Numeric, PrimaryKeyConstraint, REAL, String, Text, Time
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship 
 import uuid
@@ -135,17 +135,21 @@ class SavingsAccount(Base):
     )
 
     account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    customer_id: Mapped[uuid.UUID] = mapped_column(Integer, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     balance: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
     admin_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[list[datetime.time]]] = mapped_column(ARRAY(Time(timezone=True)))
 
+    created_date: Mapped[datetime.datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now()
+    )
+
+    updated_date: Mapped[datetime.datetime] = mapped_column(
+    DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     customer: Mapped['Customer'] = relationship('Customer', back_populates='savings_account')
     savings_interest: Mapped[list['SavingsInterest']] = relationship('SavingsInterest', back_populates='account')
     transactions: Mapped[list['Transactions']] = relationship('Transactions', back_populates='account')
-
 
 class Collateral(Base):
     __tablename__ = 'collateral'
