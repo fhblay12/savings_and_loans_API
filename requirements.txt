@@ -12,3 +12,4 @@ pydantic
 sqlacodegen
 passlib[bcrypt]
 python-jose
+pydantic[email]

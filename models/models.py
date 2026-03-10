@@ -13,18 +13,19 @@ class Base(DeclarativeBase):
 
 class Admin(Base):
     __tablename__ = 'admin'
-    __table_args__ = (
-        PrimaryKeyConstraint('admin_id', name='admin_pkey'),
-    )
 
-    admin_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    admin_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
     admin_role: Mapped[str] = mapped_column(String, nullable=False)
     admin_first_name: Mapped[str] = mapped_column(String, nullable=False)       
     admin_last_name: Mapped[str] = mapped_column(String, nullable=False)        
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-
-    loan: Mapped[list['Loan']] = relationship('Loan', back_populates='admin')   
+    password : Mapped[String]= mapped_column(String(255), nullable=False)
+    loan: Mapped[list['Loan']] = relationship('Loan', back_populates='admin')
+    email: Mapped[str] = mapped_column(String(255), nullable=False)   
 
 class Customer(Base):
     __tablename__ = 'customer'
@@ -136,8 +137,8 @@ class SavingsAccount(Base):
 
     account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    admin_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     balance: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-    admin_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     created_date: Mapped[datetime.datetime] = mapped_column(

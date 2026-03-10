@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from models.models import Customer
-from schemas.customer_schema import CustomerCreate
+from schemas.customer_schema import CustomerCreate, LoginRequest
 from datetime import datetime
-from core.security import hash_password
+from core.security import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -26,6 +26,19 @@ def create_customer(db: Session, customer_data:CustomerCreate):
     db.commit()
     db.refresh(new_member)
     return new_member
+def customer_login(db: Session, customer_data: LoginRequest):
+    # find customer by email
+    customer = db.query(Customer).filter(Customer.email == customer_data.email).first()
+
+    if not customer:
+        return None
+
+    # verify password
+    if not verify_password(customer_data.password, customer.password):
+        return None
+
+    return customer
+
 
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
     return db.query(Customer).filter(Customer.id == customer_id).first()
