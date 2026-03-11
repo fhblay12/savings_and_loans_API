@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models.models import Customer
+from models.models import Customer, SavingsAccount
 from schemas.customer_schema import CustomerCreate, LoginRequest
 from datetime import datetime
 from core.security import hash_password, verify_password
@@ -42,4 +42,19 @@ def customer_login(db: Session, customer_data: LoginRequest):
 
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
     return db.query(Customer).filter(Customer.id == customer_id).first()
+
+
+def get_savings_accounts(db: Session, customer_id: uuid.UUID):
+    # Query the account
+    account = (
+        db.query(SavingsAccount)
+        .filter(SavingsAccount.customer_id == customer_id)
+        .first()
+    )
+
+    if not account:
+        return None  # or raise HTTPException(status_code=404)
+
+    # Simply return the ORM object
+    return account  # ✅ Pydantic can convert it with from_attributes=True
 

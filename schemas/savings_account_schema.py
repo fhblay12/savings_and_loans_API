@@ -4,9 +4,18 @@ from pydantic import BaseModel, EmailStr
 import uuid
 from decimal import Decimal
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 
 class SavingsAccountCreate(BaseModel):
     customer_id: uuid.UUID
     balance: Decimal
     admin_id: int
     is_verified: bool
+
+class SavingsAccountResponse(BaseModel):
+    customer_id: uuid.UUID
+    balance: Decimal
+    created_date: datetime
+    class Config:
+        from_attributes = True
+    

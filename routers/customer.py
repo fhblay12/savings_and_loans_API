@@ -2,15 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.customer_schema import CustomerCreate
-from repositories.customer_repo import create_customer
+from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
+from repositories.customer_repo import create_customer, get_savings_accounts
 from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from models.models import Customer
 from schemas.customer_schema import LoginRequest
 from database import get_db
+from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from jose import jwt
+import uuid
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
@@ -63,3 +66,11 @@ def refresh_token_endpoint(refresh_token: str):
         raise HTTPException(status_code=401, detail="Refresh token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+
+@router.get("/{customer_id}/savings-account", response_model=List[SavingsAccountResponse])
+def get_savings_accounts_for_admin(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+    account = get_savings_accounts(db, customer_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="No savings account found")
+    return [account]  # ✅ return a list of ORM instances
