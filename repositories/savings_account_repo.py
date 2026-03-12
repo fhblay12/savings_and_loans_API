@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from models.models import SavingsAccount
 from schemas.savings_account_schema import SavingsAccountCreate
 from datetime import datetime
-from core.security import hash_password
+from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

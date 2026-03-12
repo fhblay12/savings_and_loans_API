@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from repositories.savings_account_repo import create_savings_account_repo
-from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM, get_current_user
+from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
+from core.password import hash_password, verify_password
 from models.models import EmploymentDetails
 from schemas.savings_account_schema import SavingsAccountCreate
 from database import get_db

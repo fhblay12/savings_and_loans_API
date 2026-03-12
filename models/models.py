@@ -116,7 +116,7 @@ class Loan(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
     loan_type: Mapped[str] = mapped_column(String, nullable=False)
     loan_status: Mapped[str] = mapped_column(String, nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
+    #created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
     time_of_closure: Mapped[Optional[datetime.date]] = mapped_column(Date)      
     NOC: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
     updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))

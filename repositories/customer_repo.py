@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from models.models import Customer, SavingsAccount
 from schemas.customer_schema import CustomerCreate, LoginRequest
 from datetime import datetime
-from core.security import hash_password, verify_password
+from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

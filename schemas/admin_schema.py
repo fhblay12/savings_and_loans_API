@@ -9,7 +9,8 @@ class AdminCreate(BaseModel):
     admin_role: str
     admin_first_name: str
     admin_last_name: str
-    admin_password: str
+    password: str
+    email: EmailStr
 
 class LoginRequest(BaseModel):
     email: EmailStr

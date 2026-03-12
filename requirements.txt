@@ -13,3 +13,4 @@ sqlacodegen
 passlib[bcrypt]
 python-jose
 pydantic[email]
+dateutil.relativedelta

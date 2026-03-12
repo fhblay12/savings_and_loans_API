@@ -4,7 +4,7 @@ from models.models import EmploymentDetails
 from schemas.customer_schema import CustomerCreate
 from schemas.employment_details_schema import EmploymentCreate
 from datetime import datetime
-from core.security import hash_password
+from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

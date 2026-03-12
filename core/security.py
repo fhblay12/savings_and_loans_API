@@ -4,19 +4,12 @@ from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
+from repositories.admin_repo import get_admin_by_id
+from fastapi.security import APIKeyHeader
+
+api_key_scheme = APIKeyHeader(name="Authorization")
 
 
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password[:72])
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 SECRET_KEY = "your_super_secret_key"  # keep this in .env
@@ -36,22 +29,34 @@ def create_refresh_token(data: dict, expires_days: int = 7):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="customer/login")  # token endpoint
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/customer/login")  # token endpoint
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_admin(token: str = Depends(api_key_scheme)):
     try:
+        if not token.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Invalid auth header")
+        token = token.split(" ")[1]
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return {"user_id": user_id}  # you can return a user object from DB here
+        if payload.get("type") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        return payload
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_current_user(token: str = Depends(api_key_scheme)):
+    try:
+        if not token.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Invalid auth header")
+        token = token.split(" ")[1]
+
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "customer":
+            raise HTTPException(status_code=403, detail="Customer access required")
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+oauth2_scheme_admin = OAuth2PasswordBearer(tokenUrl="/admin/login")
+
+ 

@@ -8,8 +8,10 @@ from database import get_db
 from models.models import Admin, SavingsAccount, Customer
 from schemas.admin_schema import AdminCreate, SavingAccountAdmin
 from repositories.admin_repo import create_admin, get_admin_savings_accounts
-from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user, get_current_admin
+from core.password import hash_password, verify_password
 import uuid
+from core.dependencies import require_roles
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -28,22 +30,24 @@ def create_admin_user(admin: AdminCreate, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
 
-    user = db.query(Admin).filter(Admin.email == form_data.username).first()
+    admin = db.query(Admin).filter(Admin.email == form_data.username).first()
+    
 
-    if not user:
+    if not admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
-    if not verify_password(form_data.password, user.password):
+    if not verify_password(form_data.password, admin.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
     access_token = create_access_token(
-        {"sub": str(user.admin_id), "email": user.email}
+        {"sub": str(admin.admin_id), "email": admin.email, "type": "admin",
+            "role": admin.admin_role}
     )
 
     return {
@@ -79,7 +83,8 @@ def refresh_token_endpoint(refresh_token: str):
 @router.get("/{admin_id}/savings-accounts", response_model=List[SavingAccountAdmin])
 def get_savings_accounts_for_admin(
     admin_id: uuid.UUID,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin = Depends(require_roles(["Account Administrator"]))
 ):
     accounts = get_admin_savings_accounts(db, admin_id)
 
@@ -87,3 +92,26 @@ def get_savings_accounts_for_admin(
         raise HTTPException(status_code=404, detail="No savings accounts found for this admin")
 
     return accounts
+
+
+class VerifyAccountsRequest(BaseModel):
+    account_ids: List[uuid.UUID]
+
+@router.get("/{admin_id}/unverified-accounts", response_model=List[SavingAccountAdmin])
+def get_unverified_accounts(db: Session = Depends(get_db),
+                            admin = Depends(require_roles(["Account Administrator"]))):
+    accounts = db.query(SavingsAccount).filter(SavingsAccount.is_verified == False).all()
+    return accounts
+
+@router.put("/{admin_id}/verify-accounts")
+def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"]))):
+    accounts = db.query(SavingsAccount).filter(SavingsAccount.id.in_(request.account_ids)).all()
+
+    if not accounts:
+        raise HTTPException(status_code=404, detail="No accounts found")
+
+    for account in accounts:
+        account.is_verified = True
+
+    db.commit()
+    return {"detail": f"{len(accounts)} account(s) verified successfully."}

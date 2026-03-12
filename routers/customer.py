@@ -4,11 +4,12 @@ from database import SessionLocal
 from schemas.customer_schema import CustomerCreate
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
 from repositories.customer_repo import create_customer, get_savings_accounts
-from core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM, get_current_user
+from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
+from core.password import hash_password, verify_password
 from models.models import Customer
 from schemas.customer_schema import LoginRequest
 from database import get_db
-from typing import List
+from typing import List                                                                                                                                                                                                                                                                                                                                                                                                                             
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
