@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from jose import jwt
 from typing import List
 from database import get_db
-from models.models import Admin, SavingsAccount, Customer
-from schemas.admin_schema import AdminCreate, SavingAccountAdmin
-from repositories.admin_repo import create_admin, get_admin_savings_accounts
+from models.models import Admin, SavingsAccount, Customer, Loan
+from schemas.admin_schema import AdminCreate, SavingAccountAdmin, LoanAdmin
+from repositories.admin_repo import create_admin, get_admin_savings_accounts, get_admin_loans, get_admin_unverified_savings_accounts
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user, get_current_admin
 from core.password import hash_password, verify_password
 import uuid
@@ -115,3 +115,43 @@ def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db
 
     db.commit()
     return {"detail": f"{len(accounts)} account(s) verified successfully."}
+
+
+
+class VerifyLoansRequest(BaseModel):
+    loan_ids: List[uuid.UUID]
+
+@router.get("/{admin_id}/unverified-loans", response_model=List[LoanAdmin])
+def get_unverified_accounts(db: Session = Depends(get_db),
+                            admin = Depends(require_roles(["Loan Officer"]))):
+    loans = db.query(Loan).filter(Loan.is_verified == False).all()
+    return loans
+
+@router.put("/{admin_id}/verify-loans")
+def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"]))):
+    accounts = db.query(Loan).filter(Loan.id.in_(request.loan_ids)).all()
+
+    if not accounts:
+        raise HTTPException(status_code=404, detail="No accounts found")
+
+    for account in accounts:
+        account.is_verified = True
+
+    db.commit()
+    return {"detail": f"{len(accounts)} account(s) verified successfully."}
+
+
+@router.get("/{admin_id}/loans", response_model=List[LoanAdmin])
+def get_loans_for_admin(
+    admin_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    admin = Depends(require_roles(["Loan Officer"]))
+):
+    loans = get_admin_loans(db, admin_id)
+
+    if not loans:
+        raise HTTPException(status_code=404, detail="No loans found for this admin")
+
+    return loans
+
+

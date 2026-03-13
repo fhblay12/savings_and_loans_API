@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models.models import Admin, SavingsAccount, Customer
+from models.models import Admin, SavingsAccount, Customer, Loan
 from schemas.admin_schema import AdminCreate, SavingAccountAdmin, LoginRequest
 from core.password import hash_password, verify_password
 import uuid
@@ -118,3 +118,56 @@ def admin_login(db: Session, admin_data: LoginRequest):
         return None
 
     return customer
+
+
+
+
+def get_admin_loans(db: Session, admin_id: uuid.UUID):
+
+
+    loans = (
+        db.query(Loan)
+        .join(Loan.customer)
+        .filter(Loan.admin_id == admin_id)
+        .all()
+    )
+
+    result = []
+
+    for account in loans:
+        result.append({
+            "owner_id": str(loans.customer_id),
+            "owner_first_name": loans.customer.first_name,
+            "owner_last_name": loans.customer.last_name,
+            "loan_amount": loans.loan_amount,
+            "creation_date": loans.created_date,
+            "is_verified": loans.is_verified
+        })
+
+    return result
+
+
+def get_admin_unverified_savings_accounts(db: Session, admin_id: uuid.UUID):
+
+
+    loans = (
+        db.query(Loan)
+        .join(Loan.customer)
+        .filter(Loan.admin_id == admin_id)
+        .filter(Loan.is_verified == 0)
+        .all()
+    )
+
+    result = []
+
+    for loan in loans:
+        result.append({
+            "owner_id": str(loan.customer_id),
+            "owner_first_name": loan.customer.first_name,
+            "owner_last_name": loan.customer.last_name,
+            "loan_amount": loan.loan_amount,
+            "creation_date": loan.created_date,
+            "is_verified": loan.is_verified
+        })
+
+    return result

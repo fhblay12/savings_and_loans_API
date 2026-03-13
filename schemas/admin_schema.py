@@ -25,3 +25,14 @@ class SavingAccountAdmin(BaseModel):
     is_verified: bool
     class Config:
         from_attributes = True
+
+class LoanAdmin(BaseModel):
+    owner_id:str
+    owner_first_name:str
+    owner_last_name:str
+    loan_amount: int
+    creation_date: datetime
+    is_verified: bool
+    time_of_closure: datetime
+    class Config:
+        from_attributes = True
