@@ -108,17 +108,21 @@ class Loan(Base):
         PrimaryKeyConstraint('loan_id', name='loan_pkey')
     )
 
-    loan_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    loan_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
     customer_id: Mapped[int] = mapped_column(Integer, nullable=False)
     loan_amount: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-    term_in_months_: Mapped[int] = mapped_column('term(in months)', Integer, nullable=False)
+    term_in_months: Mapped[int] = mapped_column(Integer, nullable=False)
     admin_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
     loan_type: Mapped[str] = mapped_column(String, nullable=False)
     loan_status: Mapped[str] = mapped_column(String, nullable=False)
-    #created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
+    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
     time_of_closure: Mapped[Optional[datetime.date]] = mapped_column(Date)      
-    NOC: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
+    noc: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
     updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
 
     admin: Mapped['Admin'] = relationship('Admin', back_populates='loan')       
@@ -135,7 +139,11 @@ class SavingsAccount(Base):
         PrimaryKeyConstraint('account_id', name='savings_account_pkey')
     )
 
-    account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
     customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     admin_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     balance: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)

@@ -14,9 +14,11 @@ def create_loan_details(db: Session, loan_data: LoanCreate):
 
     new_member = Loan(
         customer_id=loan_data.customer_id,
+        admin_id=loan_data.admin_id,
         loan_amount=loan_data.loan_amount,
         term_in_months=loan_data.loan_term,
         loan_type=loan_data.loan_type,
+        loan_status=loan_data.loan_status,
         is_verified=loan_data.is_verified,
         time_of_closure=toc,
         created_date=loan_data.created_date

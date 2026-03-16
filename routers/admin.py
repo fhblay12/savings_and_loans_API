@@ -97,15 +97,16 @@ def get_savings_accounts_for_admin(
 class VerifyAccountsRequest(BaseModel):
     account_ids: List[uuid.UUID]
 
-@router.get("/{admin_id}/unverified-accounts", response_model=List[SavingAccountAdmin])
-def get_unverified_accounts(db: Session = Depends(get_db),
-                            admin = Depends(require_roles(["Account Administrator"]))):
-    accounts = db.query(SavingsAccount).filter(SavingsAccount.is_verified == False).all()
+@router.get("/admin/{admin_id}/unverified-accounts")
+def get_unverified_accounts(admin_id: uuid.UUID, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"])) ):
+    
+    accounts = get_admin_unverified_savings_accounts(db, admin_id)
+
     return accounts
 
 @router.put("/{admin_id}/verify-accounts")
 def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"]))):
-    accounts = db.query(SavingsAccount).filter(SavingsAccount.id.in_(request.account_ids)).all()
+    accounts = db.query(SavingsAccount).filter(SavingsAccount.account_id.in_(request.account_ids)).all()
 
     if not accounts:
         raise HTTPException(status_code=404, detail="No accounts found")
@@ -128,8 +129,8 @@ def get_unverified_accounts(db: Session = Depends(get_db),
     return loans
 
 @router.put("/{admin_id}/verify-loans")
-def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"]))):
-    accounts = db.query(Loan).filter(Loan.id.in_(request.loan_ids)).all()
+def verify_accounts(request: VerifyLoansRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Loan Officer"]))):
+    accounts = db.query(Loan).filter(Loan.loan_id.in_(request.loan_ids)).all()
 
     if not accounts:
         raise HTTPException(status_code=404, detail="No accounts found")

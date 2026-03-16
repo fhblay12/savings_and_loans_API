@@ -10,7 +10,7 @@ from fastapi.security import APIKeyHeader
 api_key_scheme = APIKeyHeader(name="Authorization")
 
 
-
+ 
 
 SECRET_KEY = "your_super_secret_key"  # keep this in .env
 ALGORITHM = "HS256"

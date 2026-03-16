@@ -5,12 +5,13 @@ import uuid
 from decimal import Decimal
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
+from typing import Optional
 
 class SavingsAccountCreate(BaseModel):
     customer_id: uuid.UUID
     balance: Decimal
-    admin_id: int
-    is_verified: bool
+    admin_id: uuid.UUID
+    is_verified: Optional[bool] = False
 
 class SavingsAccountResponse(BaseModel):
     customer_id: uuid.UUID

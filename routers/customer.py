@@ -39,7 +39,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Invalid email or password"
         )
 
-    token = create_access_token({"sub": user.email, "id": str(user.customer_id)})
+    token = create_access_token({"sub": user.email, "id": str(user.customer_id), "type": "customer"})
 
     return {
         "access_token": token,

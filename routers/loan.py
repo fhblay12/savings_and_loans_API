@@ -17,5 +17,6 @@ import uuid
 router = APIRouter(prefix="/loan", tags=["loan"])
 
 @router.post("/apply")
-def create_registration_endpoint(loan: LoanCreate, db: Session = Depends(get_current_user)):
+def create_registration_endpoint(loan: LoanCreate, db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)):
     return create_loan_details(db, loan)
