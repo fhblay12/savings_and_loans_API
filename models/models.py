@@ -124,7 +124,7 @@ class Loan(Base):
     time_of_closure: Mapped[Optional[datetime.date]] = mapped_column(Date)      
     noc: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
     updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-
+    interest_rate: Mapped[decimal.Decimal] = mapped_column(Numeric(1, 5), nullable=False)
     admin: Mapped['Admin'] = relationship('Admin', back_populates='loan')       
     customer: Mapped['Customer'] = relationship('Customer', back_populates='loan')
     collateral: Mapped[list['Collateral']] = relationship('Collateral', back_populates='loan')
@@ -200,14 +200,14 @@ class LoanPayment(Base):
         ForeignKeyConstraint(['loan_id'], ['loan.loan_id'], name='loan_payment_loan_id_fk'),
         PrimaryKeyConstraint('loan_payment_id', name='loan_payment_pkey')       
     )
-
-    loan_payment_id: Mapped[int] = mapped_column(Integer, primary_key=True)     
-    loan_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    payment_amount: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-    payment_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)   
-    payment_type: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    loan_payment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    loan_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    payment_amount: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)   
+    payment_type: Mapped[str] = mapped_column(String, nullable=False)
 
     loan: Mapped['Loan'] = relationship('Loan', back_populates='loan_payment')  
 
@@ -236,12 +236,12 @@ class Transactions(Base):
         PrimaryKeyConstraint('transaction_id', 'transaction_type', name='transactions_pkey')
     )
 
-    transaction_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    account_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    transaction_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4)
+    account_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     transaction_type: Mapped[str] = mapped_column(String, primary_key=True)
     amount_to_be_withdrawn_or_added: Mapped[decimal.Decimal] = mapped_column('amount to be withdrawn or added', Numeric(1000, 1000), nullable=False)
-    balance_after_transaction: Mapped[decimal.Decimal] = mapped_column('balance after_transaction', Numeric(1000, 1000), nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    
 
     account: Mapped['SavingsAccount'] = relationship('SavingsAccount', back_populates='transactions')

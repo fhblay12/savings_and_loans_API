@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
-from models.models import Customer, SavingsAccount
+from models.models import Customer, SavingsAccount, Transactions, Loan, LoanPayment
 from schemas.customer_schema import CustomerCreate, LoginRequest
+from schemas.transaction_schema import Transaction
+from schemas.loan_payment_schema import LoanPayments
 from datetime import datetime
 from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
@@ -43,7 +45,6 @@ def customer_login(db: Session, customer_data: LoginRequest):
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
     return db.query(Customer).filter(Customer.id == customer_id).first()
 
-
 def get_savings_accounts(db: Session, customer_id: uuid.UUID):
     # Query the account
     account = (
@@ -58,3 +59,30 @@ def get_savings_accounts(db: Session, customer_id: uuid.UUID):
     # Simply return the ORM object
     return account  # ✅ Pydantic can convert it with from_attributes=True
 
+def get_loans(db: Session, customer_id: uuid.UUID):
+    # Query the account
+    loans = (
+        db.query(Loan)
+        .filter(Loan.customer_id == customer_id)
+        .all()
+    )
+
+    if not loans:
+        return None  # or raise HTTPException(status_code=404)
+
+    # Simply return the ORM object
+    return loans 
+
+def transaction(db: Session, transaction_data:Transaction):
+    new_member = Transactions(
+        account_id=transaction_data.account_id,
+        transaction_type=transaction_data.transaction_type,
+        transaction_amount=transaction_data.amount_to_be_withdrawn_or_added,
+    )
+
+def loan_payment(db: Session, loan_payment_data: LoanPayments):
+    new_member = LoanPayment(
+        loan_id=loan_payment_data.loan_id,
+        payment_amount=loan_payment_data.payment_amount,
+        payment_type=loan_payment_data.payment_type
+    )

@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.customer_schema import CustomerCreate
+from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
-from repositories.customer_repo import create_customer, get_savings_accounts
+from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
-from models.models import Customer
-from schemas.customer_schema import LoginRequest
+from models.models import Customer, Transactions, SavingsAccount, Loan, LoanPayment
+from schemas.loan_schema import LoanResponse 
 from database import get_db
 from typing import List                                                                                                                                                                                                                                                                                                                                                                                                                             
 from fastapi import APIRouter, HTTPException, Depends
@@ -15,6 +16,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from jose import jwt
 import uuid
+from decimal import Decimal
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
@@ -75,3 +77,96 @@ def get_savings_accounts_for_admin(customer_id: uuid.UUID, db: Session = Depends
     if not account:
         raise HTTPException(status_code=404, detail="No savings account found")
     return [account]  # ✅ return a list of ORM instances
+
+@router.get("/{customer_id}/loan", response_model=List[LoanResponse])
+def get_loans_for_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+    loans = get_loans(db, customer_id)
+    if not loans:
+        raise HTTPException(status_code=404, detail="No savings account found")
+    return loans  # ✅ return a list of ORM instances
+
+@router.post("/{customer_id}/transaction")
+def create_transaction(
+    account_id: uuid.UUID,
+    amount: float,
+    tx_type: str,
+    db: Session = Depends(get_db)
+):
+
+    amount = Decimal(str(amount))
+    tx_type=tx_type.capitalize()
+    account = (
+        db.query(SavingsAccount)
+        .filter(SavingsAccount.account_id == account_id)
+        .first()
+    )
+
+    if not account:
+        raise ValueError("Account not found")
+
+    # Update balance correctly
+    if tx_type == "Deposit":
+        account.balance += amount
+    elif tx_type == "Withdrawal":
+        if account.balance < amount:
+            raise ValueError("Insufficient funds")
+        account.balance -= amount
+    else:
+        raise ValueError("Invalid transaction type")
+
+    # Create transaction record
+    transaction = Transactions(
+        account_id=account_id,
+        transaction_type=tx_type,
+        amount_to_be_withdrawn_or_added=amount
+    )
+
+    db.add(transaction)
+
+    # Commit BOTH changes together
+    db.commit()
+    db.refresh(account)
+
+    return account
+
+
+@router.post("/{customer_id}/loan_payment")
+def create_transaction(
+    loan_id: uuid.UUID,
+    payment_amount: float,
+    payment_type: str,
+    db: Session = Depends(get_db)
+):
+
+    payment_amount = Decimal(str(payment_amount))
+    payment_type=payment_type.capitalize()
+    loan = (
+        db.query(Loan)
+        .filter(Loan.loan_id == loan_id)
+        .first()
+    )
+
+    if not loan:
+        raise ValueError("Loan not found")
+
+    # Update balance correctly
+    if payment_type == "Standard":
+        loan.loan_amount -= payment_amount
+    else:
+        raise ValueError("Invalid transaction type")
+
+    # Create transaction record
+    payment = LoanPayment(
+        loan_id=loan_id,
+        payment_amount=payment_amount,
+        payment_type=payment_type,
+        
+    )
+
+    db.add(payment)
+
+    # Commit BOTH changes together
+    db.commit()
+    db.refresh(loan)
+
+    return loan

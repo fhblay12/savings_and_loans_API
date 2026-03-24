@@ -14,5 +14,17 @@ class LoanCreate(BaseModel):
     loan_term: int
     loan_type: str
     is_verified: bool
+    interest_rate: Decimal
     created_date: datetime
-  
+
+class LoanResponse(BaseModel):
+    customer_id: uuid.UUID
+    loan_amount: Decimal
+    created_date: datetime
+    time_of_closure: datetime
+    loan_type: str
+    loan_status: str
+    interest_rate: Decimal
+
+    class Config:
+        from_attributes = True

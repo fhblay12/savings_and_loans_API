@@ -20,6 +20,7 @@ def create_loan_details(db: Session, loan_data: LoanCreate):
         loan_type=loan_data.loan_type,
         loan_status=loan_data.loan_status,
         is_verified=loan_data.is_verified,
+        loan_interest=loan_data.interest_rate,
         time_of_closure=toc,
         created_date=loan_data.created_date
     )
