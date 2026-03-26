@@ -5,6 +5,7 @@ from schemas.customer_schema import CustomerCreate
 from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
 from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans
+from services.customer_loan_payment_services import standard_loan_payment
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import Customer, Transactions, SavingsAccount, Loan, LoanPayment
@@ -131,7 +132,7 @@ def create_transaction(
 
 
 @router.post("/{customer_id}/loan_payment")
-def create_transaction(
+def loan_payment(
     loan_id: uuid.UUID,
     payment_amount: float,
     payment_type: str,
@@ -151,7 +152,8 @@ def create_transaction(
 
     # Update balance correctly
     if payment_type == "Standard":
-        loan.loan_amount -= payment_amount
+        standard_loan_payment(loan, payment_amount) 
+
     else:
         raise ValueError("Invalid transaction type")
 

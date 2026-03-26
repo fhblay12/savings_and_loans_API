@@ -124,11 +124,10 @@ class Loan(Base):
     time_of_closure: Mapped[Optional[datetime.date]] = mapped_column(Date)      
     noc: Mapped[Optional[bytes]] = mapped_column(LargeBinary)
     updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-    interest_rate: Mapped[decimal.Decimal] = mapped_column(Numeric(1, 5), nullable=False)
+    interest_rate: Mapped[decimal.Decimal] = mapped_column(Numeric(12, 5), nullable=False)
     admin: Mapped['Admin'] = relationship('Admin', back_populates='loan')       
     customer: Mapped['Customer'] = relationship('Customer', back_populates='loan')
     collateral: Mapped[list['Collateral']] = relationship('Collateral', back_populates='loan')
-    loan_interest: Mapped[list['LoanInterest']] = relationship('LoanInterest', back_populates='loan')
     loan_payment: Mapped[list['LoanPayment']] = relationship('LoanPayment', back_populates='loan')
 
 
@@ -167,31 +166,17 @@ class Collateral(Base):
         PrimaryKeyConstraint('collateral_id', name='collateral_pkey')
     )
 
-    collateral_id: Mapped[int] = mapped_column(Integer, primary_key=True)       
+    collateral_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
     loan_id: Mapped[int] = mapped_column(Integer, nullable=False)
     collateral_type: Mapped[str] = mapped_column(String, nullable=False)        
     collateral_value: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
 
     loan: Mapped['Loan'] = relationship('Loan', back_populates='collateral')    
 
-
-class LoanInterest(Base):
-    __tablename__ = 'loan_interest'
-    __table_args__ = (
-        ForeignKeyConstraint(['loan_id'], ['loan.loan_id'], name='loan_interest_loan_id_fk'),
-        PrimaryKeyConstraint('interest_id', name='loan_interest_pkey')
-    )
-
-    interest_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    loan_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    interest_rate: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 10), nullable=False)
-    effective_year: Mapped[str] = mapped_column(String, nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-
-    loan: Mapped['Loan'] = relationship('Loan', back_populates='loan_interest') 
 
 
 class LoanPayment(Base):

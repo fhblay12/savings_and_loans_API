@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.loan_schema import LoanCreate
-from repositories.loan_repo import create_loan_details
+from schemas.collateral_schema import Collateral_schema
+from repositories.loan_repo import create_loan_details, create_collateral
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import Loan
@@ -20,3 +21,12 @@ router = APIRouter(prefix="/loan", tags=["loan"])
 def create_registration_endpoint(loan: LoanCreate, db: Session = Depends(get_db),
     current_user = Depends(get_current_user)):
     return create_loan_details(db, loan)
+
+@router.post("/apply/{loan_id}/collateral")
+def create_registration_endpoint(
+    loan_id: uuid.UUID,
+    collateral: Collateral_schema,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    return create_collateral(db, collateral, loan_id)
