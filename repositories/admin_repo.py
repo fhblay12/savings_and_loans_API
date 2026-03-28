@@ -4,7 +4,14 @@ from schemas.admin_schema import AdminCreate, SavingAccountAdmin, LoginRequest
 from core.password import hash_password, verify_password
 import uuid
 from sqlalchemy.orm import joinedload
+import random
 
+def random_account_administrator(db: Session):
+    admins = db.query(Admin).filter(Admin.admin_role == "Account Administrator").all()
+    if not admins:
+        return None
+    
+    return random.choice(admins)
 def create_admin(db: Session, admin_data: AdminCreate):
     # check if admin already exists
     existing_admin = db.query(Admin).filter(Admin.email == admin_data.email).first()

@@ -1,32 +1,81 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import Request
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from schemas.loan_schema import LoanCreate
-from schemas.collateral_schema import Collateral_schema
+from schemas.loan_schema import LoanCreate, loan_form
+from schemas.collateral_schema import Collateral_schema, collateral_form
 from repositories.loan_repo import create_loan_details, create_collateral
+from repositories.admin_repo import random_account_administrator
+from repositories.collateral_repo import create_collateral_details
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
-from models.models import Loan
+from models.models import Loan, Admin, Collateral
 from database import get_db
 from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from jose import jwt
+import random
 import uuid
+from fastapi.templating import Jinja2Templates
+from datetime import datetime
+from fastapi.responses import RedirectResponse
+
+templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/loan", tags=["loan"])
 
-@router.post("/apply")
-def create_registration_endpoint(loan: LoanCreate, db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)):
-    return create_loan_details(db, loan)
+@router.get("/apply/{customer_id}", response_class=HTMLResponse)
+def show_apply_form(request: Request, customer_id: uuid.UUID):
+    return templates.TemplateResponse(
+        "apply_loan.html",
+        {
+            "request": request,
+            "customer_id": customer_id
+        }
+    )
 
+@router.post("/apply/{customer_id}",  response_class=HTMLResponse)
+def apply_loan(
+    request: Request,
+    customer_id: uuid.UUID,
+    loan: LoanCreate = Depends(loan_form),
+    db: Session = Depends(get_db)
+):
+        # Pick a random account administrator
+    admin = random_account_administrator(db)
+    if not admin:
+        return templates.TemplateResponse(
+            "loan_error.html",
+            {"request": request, "error": "No account administrator available."}
+        )
+    #toc = loan_data.created_date + relativedelta(months=loan_data.loan_term)
+    new_loan = create_loan_details(db, loan, admin, customer_id)
+
+    return RedirectResponse(
+        url=f"/loan/apply/{new_loan.loan_id}/collateral",
+        status_code=303
+    )
+
+
+@router.get("/apply/{loan_id}/collateral", response_class=HTMLResponse)
+def collateral(request: Request, loan_id: uuid.UUID):
+    return templates.TemplateResponse(
+        "apply_loan_collateral.html",
+        {
+            "request": request,
+            "loan_id": loan_id
+        }
+    )
 @router.post("/apply/{loan_id}/collateral")
 def create_registration_endpoint(
+    request: Request,
     loan_id: uuid.UUID,
-    collateral: Collateral_schema,
+    collateral: Collateral_schema = Depends(collateral_form),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    return create_collateral(db, collateral, loan_id)
+    #current_user = Depends(get_current_user)
+    ):
+    new_collateral = create_collateral_details(db, collateral, loan_id)
+    return templates.TemplateResponse( "loan_success.html", { "request": request, "collateral": new_collateral } )

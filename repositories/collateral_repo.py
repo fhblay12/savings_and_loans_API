@@ -8,25 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from dateutil.relativedelta import relativedelta
 
-def create_loan_details(db: Session, loan, admin, customer_id):
-
-    new_member = Loan(
-        **loan.dict(),
-        customer_id=customer_id,
-        admin_id=admin.admin_id,
-        loan_status="Pending",
-        is_verified=False,
-        created_date= datetime.now()
-    )
-
-    db.add(new_member)
-    db.commit()
-    db.refresh(new_member)
-
-    return new_member
-
-
-def create_collateral(db: Session, collateral_data: Collateral_schema, loan_id):
+def create_collateral_details(db: Session, collateral_data, loan_id ):
 
     new_member = Collateral(
         loan_id=loan_id,

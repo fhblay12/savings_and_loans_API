@@ -174,7 +174,7 @@ class Collateral(Base):
     loan_id: Mapped[int] = mapped_column(Integer, nullable=False)
     collateral_type: Mapped[str] = mapped_column(String, nullable=False)        
     collateral_value: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-
+    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
     loan: Mapped['Loan'] = relationship('Loan', back_populates='collateral')    
 
 

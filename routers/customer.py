@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
+from fastapi import Request
 from database import SessionLocal
-from schemas.customer_schema import CustomerCreate
+from schemas.customer_schema import CustomerCreate, customer_form
 from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
 from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans
@@ -18,12 +20,34 @@ from pydantic import BaseModel
 from jose import jwt
 import uuid
 from decimal import Decimal
+from fastapi.templating import Jinja2Templates
+from datetime import datetime
+from fastapi.responses import RedirectResponse
+templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
-@router.post("/")
-def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
-    return create_customer(db, customer)
+@router.get("/register", response_class=HTMLResponse)
+def collateral(request: Request):
+    return templates.TemplateResponse(
+        "register.html",
+        {
+            "request": request,
+        }
+    )
+@router.post("/register")
+def create_registration_endpoint(customer: CustomerCreate=Depends(customer_form), db: Session = Depends(get_db)):
+    customer=create_customer(db, customer)
+    return RedirectResponse(url=f"/customer/login", status_code=303)
+
+@router.get("/login", response_class=HTMLResponse)
+def collateral(request: Request):
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+        }
+    )
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -44,10 +68,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     token = create_access_token({"sub": user.email, "id": str(user.customer_id), "type": "customer"})
 
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    response = RedirectResponse(url=f"/customer/{user.customer_id}/savings-account", status_code=303)
+
+    # ✅ Store token in cookie
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {token}",
+        httponly=True
+    )
+
+    return response
 
 
 class Token(BaseModel):
@@ -73,14 +103,14 @@ def refresh_token_endpoint(refresh_token: str):
     
 
 @router.get("/{customer_id}/savings-account", response_model=List[SavingsAccountResponse])
-def get_savings_accounts_for_admin(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_savings_accounts_for_admin(customer_id: uuid.UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
     account = get_savings_accounts(db, customer_id)
     if not account:
         raise HTTPException(status_code=404, detail="No savings account found")
     return [account]  # ✅ return a list of ORM instances
 
 @router.get("/{customer_id}/loan", response_model=List[LoanResponse])
-def get_loans_for_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_loans_for_customer(customer_id: uuid.UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
     loans = get_loans(db, customer_id)
     if not loans:
         raise HTTPException(status_code=404, detail="No savings account found")

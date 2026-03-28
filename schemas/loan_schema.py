@@ -4,18 +4,14 @@ from pydantic import BaseModel, EmailStr
 import uuid
 from decimal import Decimal
 from sqlalchemy.dialects.postgresql import UUID
+from fastapi import Depends, Form
+
 
 class LoanCreate(BaseModel):
-    customer_id: uuid.UUID
-    admin_id: uuid.UUID
     loan_amount: int
     loan_type: str
-    loan_status: str
-    loan_term: int
-    loan_type: str
-    is_verified: bool
-    interest_rate: Decimal
-    created_date: datetime
+    term_in_months: int
+
 
 class LoanResponse(BaseModel):
     customer_id: uuid.UUID
@@ -28,3 +24,14 @@ class LoanResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+def loan_form(
+    loan_amount: int = Form(...),
+    loan_type: str = Form(...),
+    term_in_months: int = Form(...)
+) -> LoanCreate:
+    return LoanCreate(
+        loan_amount=loan_amount,
+        loan_type=loan_type,
+        term_in_months=term_in_months,
+    )
