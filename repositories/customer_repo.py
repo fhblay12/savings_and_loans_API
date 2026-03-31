@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.models import Customer, SavingsAccount, Transactions, Loan, LoanPayment
-from schemas.customer_schema import CustomerCreate, LoginRequest
+from schemas.customer_schema import CustomerCreate, CustomerUpdate, LoginRequest
 from schemas.transaction_schema import Transaction
 from schemas.loan_payment_schema import LoanPayments
 from datetime import datetime
@@ -28,6 +28,23 @@ def create_customer(db: Session, customer_data:CustomerCreate):
     db.commit()
     db.refresh(new_member)
     return new_member
+
+def update_customer(db: Session, customer_id: uuid.UUID, customer_update: CustomerUpdate):
+    db_customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+
+    if not db_customer:
+        return None
+
+    update_data = customer_update.dict(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_customer, key, value)
+
+    db.commit()
+    db.refresh(db_customer)
+
+    return db_customer
+
 def customer_login(db: Session, customer_data: LoginRequest):
     # find customer by email
     customer = db.query(Customer).filter(Customer.email == customer_data.email).first()

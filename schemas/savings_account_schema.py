@@ -13,6 +13,11 @@ class SavingsAccountCreate(BaseModel):
     admin_id: uuid.UUID
     is_verified: Optional[bool] = False
 
+class SavingsAccountUpdate(BaseModel):
+    customer_id: Optional[uuid.UUID] = None
+    balance: Optional[Decimal] = None   
+    is_verified: Optional[bool] = False
+
 class SavingsAccountResponse(BaseModel):
     customer_id: uuid.UUID
     balance: Decimal

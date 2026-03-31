@@ -15,7 +15,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
-from routers import customer, employment_details, savings_account, admin, loan
+from repositories.customer_repo import transaction
+from routers import collateral, customer, employment_details, savings_account, admin, loan, transactions, loan_payment
 from database import engine, Base
 
 app = FastAPI()
@@ -35,3 +36,7 @@ app.include_router(employment_details.router)
 app.include_router(savings_account.router)
 app.include_router(admin.router)
 app.include_router(loan.router)
+app.include_router(collateral.router)
+app.include_router(transactions.router)
+app.include_router(loan_payment.router)
+

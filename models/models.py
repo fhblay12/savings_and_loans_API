@@ -86,17 +86,18 @@ class EmploymentDetails(Base):
         PrimaryKeyConstraint('employment_details_id', name='employment_details_pkey')
     )
 
-    employment_details_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    customer_id: Mapped[uuid.UUID] = mapped_column(Integer, nullable=False)
+    employment_details_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )
+    customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     job_title: Mapped[str] = mapped_column(String, nullable=False)
     employment_type: Mapped[str] = mapped_column(String, nullable=False)        
     monthly_income: Mapped[int] = mapped_column(Integer, nullable=False)        
     employment_start_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    created_time: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
     employer_first_name: Mapped[Optional[str]] = mapped_column(String)
     employer_last_name: Mapped[Optional[str]] = mapped_column(String)
-    updated_time: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-
     customer: Mapped['Customer'] = relationship('Customer', back_populates='employment_details')
 
 
@@ -135,6 +136,7 @@ class SavingsAccount(Base):
     __tablename__ = 'savings_account'
     __table_args__ = (
         ForeignKeyConstraint(['customer_id'], ['customer.customer_id'], name='savings_account_customer_id_fk'),
+        ForeignKeyConstraint(['admin_id'], ['admin.admin_id'], name='savings_account_admin_id_fk'),
         PrimaryKeyConstraint('account_id', name='savings_account_pkey')
     )
 
@@ -143,21 +145,47 @@ class SavingsAccount(Base):
         primary_key=True,
         default=uuid.uuid4
     )
+
     customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     admin_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    balance: Mapped[decimal.Decimal] = mapped_column(Numeric(1000, 1000), nullable=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    balance: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(12, 2),   # ✅ FIXED (was 1000,1000)
+        nullable=False
+    )
+
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False   # ✅ added default
+    )
+
+    interest_rate: Mapped[decimal.Decimal] = mapped_column(
+        Numeric(12, 5),
+        nullable=False
+    )
 
     created_date: Mapped[datetime.datetime] = mapped_column(
-    DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        server_default=func.now()
     )
 
     updated_date: Mapped[datetime.datetime] = mapped_column(
-    DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
     )
-    customer: Mapped['Customer'] = relationship('Customer', back_populates='savings_account')
-    savings_interest: Mapped[list['SavingsInterest']] = relationship('SavingsInterest', back_populates='account')
-    transactions: Mapped[list['Transactions']] = relationship('Transactions', back_populates='account')
+
+    customer: Mapped['Customer'] = relationship(
+        'Customer',
+        back_populates='savings_account'  # ⚠️ ensure this matches Customer model
+    )
+
+    transactions: Mapped[list['Transactions']] = relationship(
+        'Transactions',
+        back_populates='account',
+        cascade="all, delete"
+    )
 
 class Collateral(Base):
     __tablename__ = 'collateral'
@@ -197,21 +225,7 @@ class LoanPayment(Base):
     loan: Mapped['Loan'] = relationship('Loan', back_populates='loan_payment')  
 
 
-class SavingsInterest(Base):
-    __tablename__ = 'savings_interest'
-    __table_args__ = (
-        ForeignKeyConstraint(['account_id'], ['savings_account.account_id'], name='savings_interest_account_id'),
-        PrimaryKeyConstraint('interest_id', name='savings_interest_pkey')       
-    )
 
-    interest_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    account_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    apy: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 1000), nullable=False)
-    year: Mapped[str] = mapped_column(String, nullable=False)
-    created_date: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False)
-    updated_date: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
-
-    account: Mapped['SavingsAccount'] = relationship('SavingsAccount', back_populates='savings_interest')
 
 
 class Transactions(Base):

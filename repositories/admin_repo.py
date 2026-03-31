@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.models import Admin, SavingsAccount, Customer, Loan
-from schemas.admin_schema import AdminCreate, SavingAccountAdmin, LoginRequest
+from schemas.admin_schema import AdminCreate, AdminUpdate, SavingAccountAdmin, LoginRequest
 from core.password import hash_password, verify_password
 import uuid
 from sqlalchemy.orm import joinedload
@@ -36,7 +36,21 @@ def create_admin(db: Session, admin_data: AdminCreate):
 
     return new_admin
 
+def update_admin(db: Session, admin_id: uuid.UUID, admin_update: AdminUpdate):
+    db_admin = db.query(Admin).filter(Admin.admin_id == admin_id).first()
 
+    if not db_admin:
+        return None
+
+    update_data = admin_update.dict(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_admin, key, value)
+
+    db.commit()
+    db.refresh(db_admin)
+
+    return db_admin 
 def get_admin_savings_accounts(db: Session, admin_id: uuid.UUID):
 
 

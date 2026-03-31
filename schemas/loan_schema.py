@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, AwareDatetime
 from datetime import date, timezone, datetime
 from pydantic import BaseModel, EmailStr
@@ -24,6 +26,15 @@ class LoanResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class LoanUpdate(BaseModel):
+    customer_id: Optional[uuid.UUID] = None
+    loan_amount: Optional[Decimal] = None
+    created_date: Optional[datetime] = None
+    time_of_closure: Optional[datetime] = None
+    loan_type: Optional[str] = None
+    loan_status: Optional[str] = None
+    interest_rate: Optional[Decimal] = None
 
 def loan_form(
     loan_amount: int = Form(...),

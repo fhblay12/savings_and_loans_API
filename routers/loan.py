@@ -3,9 +3,9 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from schemas.loan_schema import LoanCreate, loan_form
+from schemas.loan_schema import LoanCreate, LoanUpdate, loan_form
 from schemas.collateral_schema import Collateral_schema, collateral_form
-from repositories.loan_repo import create_loan_details, create_collateral
+from repositories.loan_repo import create_loan_details, create_collateral, update_loan_details
 from repositories.admin_repo import random_account_administrator
 from repositories.collateral_repo import create_collateral_details
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
@@ -27,15 +27,15 @@ templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/loan", tags=["loan"])
 
-@router.get("/apply/{customer_id}", response_class=HTMLResponse)
-def show_apply_form(request: Request, customer_id: uuid.UUID):
-    return templates.TemplateResponse(
-        "apply_loan.html",
-        {
-            "request": request,
-            "customer_id": customer_id
-        }
-    )
+# @router.get("/apply/{customer_id}", response_class=HTMLResponse)
+# def show_apply_form(request: Request, customer_id: uuid.UUID):
+#     return templates.TemplateResponse(
+#         "apply_loan.html",
+#         {
+#             "request": request,
+#             "customer_id": customer_id
+#         }
+#     )
 
 @router.post("/apply/{customer_id}",  response_class=HTMLResponse)
 def apply_loan(
@@ -59,23 +59,19 @@ def apply_loan(
         status_code=303
     )
 
+@router.patch("/update/{loan_id}")
+def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depends(get_db)):
+    updated_loan = update_loan_details(db=db, loan_id=loan_id, loan_update=loan_update)
+    return updated_loan
 
-@router.get("/apply/{loan_id}/collateral", response_class=HTMLResponse)
-def collateral(request: Request, loan_id: uuid.UUID):
-    return templates.TemplateResponse(
-        "apply_loan_collateral.html",
-        {
-            "request": request,
-            "loan_id": loan_id
-        }
-    )
-@router.post("/apply/{loan_id}/collateral")
-def create_registration_endpoint(
-    request: Request,
-    loan_id: uuid.UUID,
-    collateral: Collateral_schema = Depends(collateral_form),
-    db: Session = Depends(get_db),
-    #current_user = Depends(get_current_user)
-    ):
-    new_collateral = create_collateral_details(db, collateral, loan_id)
-    return templates.TemplateResponse( "loan_success.html", { "request": request, "collateral": new_collateral } )
+@router.delete("/delete/{loan_id}")
+def delete_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)): 
+    loan = db.query(Loan).filter(Loan.loan_id == loan_id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    db.delete(loan)
+    db.commit()
+    return {"message": "Loan deleted successfully"}
+
+
+

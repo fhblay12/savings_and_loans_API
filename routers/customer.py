@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from database import SessionLocal
-from schemas.customer_schema import CustomerCreate, customer_form
+from repositories import customer_repo
+from schemas.customer_schema import CustomerCreate, CustomerUpdate, customer_form
 from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
-from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans
+from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans, update_customer, customer_login
 from services.customer_loan_payment_services import standard_loan_payment
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
@@ -27,27 +28,22 @@ templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
-@router.get("/register", response_class=HTMLResponse)
-def collateral(request: Request):
-    return templates.TemplateResponse(
-        "register.html",
-        {
-            "request": request,
-        }
-    )
+#@router.get("/register", response_class=HTMLResponse)
+#def collateral(request: Request):
+#    return templates.TemplateResponse(
+#        "register.html",
+#        {
+#            "request": request,
+#        }
+#    )
 @router.post("/register")
-def create_registration_endpoint(customer: CustomerCreate=Depends(customer_form), db: Session = Depends(get_db)):
+def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
     customer=create_customer(db, customer)
-    return RedirectResponse(url=f"/customer/login", status_code=303)
+    return {
+        "message": "User registered successfully",
+        "customer": customer
+    }
 
-@router.get("/login", response_class=HTMLResponse)
-def collateral(request: Request):
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-        }
-    )
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -85,6 +81,28 @@ class Token(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
 
+@router.patch("/update/{customer_id}")
+def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Session = Depends(get_db)):
+    updated_customer = update_customer(db=db, customer_id=customer_id, customer_update=customer)
+    return { 
+        "message": "Customer updated successfully",
+        "customer": updated_customer
+    }
+
+@router.delete("/delete/{customer_id}")
+def delete_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    db.delete(customer)
+    db.commit()
+
+    return {"message": "Customer deleted"}
+    
+
+    return {"message": "Item deleted"}
 @router.post("/refresh", response_model=Token)
 def refresh_token_endpoint(refresh_token: str):
     try:
@@ -102,63 +120,6 @@ def refresh_token_endpoint(refresh_token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
     
 
-@router.get("/{customer_id}/savings-account", response_model=List[SavingsAccountResponse])
-def get_savings_accounts_for_admin(customer_id: uuid.UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    account = get_savings_accounts(db, customer_id)
-    if not account:
-        raise HTTPException(status_code=404, detail="No savings account found")
-    return [account]  # ✅ return a list of ORM instances
-
-@router.get("/{customer_id}/loan", response_model=List[LoanResponse])
-def get_loans_for_customer(customer_id: uuid.UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    loans = get_loans(db, customer_id)
-    if not loans:
-        raise HTTPException(status_code=404, detail="No savings account found")
-    return loans  # ✅ return a list of ORM instances
-
-@router.post("/{customer_id}/transaction")
-def create_transaction(
-    account_id: uuid.UUID,
-    amount: float,
-    tx_type: str,
-    db: Session = Depends(get_db)
-):
-
-    amount = Decimal(str(amount))
-    tx_type=tx_type.capitalize()
-    account = (
-        db.query(SavingsAccount)
-        .filter(SavingsAccount.account_id == account_id)
-        .first()
-    )
-
-    if not account:
-        raise ValueError("Account not found")
-
-    # Update balance correctly
-    if tx_type == "Deposit":
-        account.balance += amount
-    elif tx_type == "Withdrawal":
-        if account.balance < amount:
-            raise ValueError("Insufficient funds")
-        account.balance -= amount
-    else:
-        raise ValueError("Invalid transaction type")
-
-    # Create transaction record
-    transaction = Transactions(
-        account_id=account_id,
-        transaction_type=tx_type,
-        amount_to_be_withdrawn_or_added=amount
-    )
-
-    db.add(transaction)
-
-    # Commit BOTH changes together
-    db.commit()
-    db.refresh(account)
-
-    return account
 
 
 @router.post("/{customer_id}/loan_payment")

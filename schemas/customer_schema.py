@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, AwareDatetime
 from datetime import date, timezone
 from pydantic import BaseModel, EmailStr
@@ -8,13 +10,26 @@ class CustomerCreate(BaseModel):
     last_name: str
     address: str
     social_security_number: str
-    government_ID: str
+    government_ID: Optional[str] = None
     email: EmailStr
     phone_number: str
     DOB: date
     credit_score: int
-    customer_type: str
+    customer_type: Optional[str] = None
     password: str
+
+class CustomerUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    address: Optional[str] = None
+    social_security_number: Optional[str] = None
+    government_ID: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    DOB: Optional[date] = None
+    credit_score: Optional[int] = None
+    customer_type: Optional[str] = None
+    password: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: EmailStr

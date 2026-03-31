@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, AwareDatetime
 from datetime import date, timezone, datetime
 from pydantic import BaseModel, EmailStr
@@ -11,6 +13,14 @@ class AdminCreate(BaseModel):
     admin_last_name: str
     password: str
     email: EmailStr
+
+
+class AdminUpdate(BaseModel):
+    admin_role: Optional[str] = None
+    admin_first_name: Optional[str] = None
+    admin_last_name: Optional[str] = None
+    password: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 class LoginRequest(BaseModel):
     email: EmailStr
