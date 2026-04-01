@@ -15,14 +15,24 @@ class LoanCreate(BaseModel):
     term_in_months: int
 
 
-class LoanResponse(BaseModel):
-    customer_id: uuid.UUID
+class LoanRes(BaseModel):
+    owner_id: uuid.UUID
+    owner_first_name: str
+    owner_last_name: str
     loan_amount: Decimal
-    created_date: datetime
-    time_of_closure: datetime
-    loan_type: str
     loan_status: str
-    interest_rate: Decimal
+    creation_date: datetime
+    time_of_closure: Optional[datetime] = None
+    is_verified: bool
+    
+class LoanResponse(BaseModel):
+    customer_id: Optional[uuid.UUID] = None
+    loan_amount: Optional[Decimal] = None
+    created_date: Optional[datetime] = None
+    time_of_closure: Optional[datetime] = None
+    loan_type: Optional[str] = None
+    loan_status: Optional[str] = None
+    interest_rate: Optional[Decimal] = None
 
     class Config:
         from_attributes = True

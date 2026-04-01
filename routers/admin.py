@@ -7,11 +7,13 @@ from typing import List
 from database import get_db
 from models.models import Admin, SavingsAccount, Customer, Loan
 from schemas.admin_schema import AdminCreate, AdminUpdate, SavingAccountAdmin, LoanAdmin
+from schemas.loan_schema import LoanRes
 from repositories.admin_repo import create_admin, get_admin_savings_accounts, get_admin_loans, get_admin_unverified_savings_accounts, update_admin
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user, get_current_admin
 from core.password import hash_password, verify_password
 import uuid
 from core.dependencies import require_roles
+from schemas.loan_schema import LoanResponse
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -56,7 +58,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     }
 
 @router.patch("/update/{admin_id}")
-def update_admin(admin_id: uuid.UUID, admin_update: AdminUpdate, db: Session = Depends(get_db)):
+def update_admins(admin_id: uuid.UUID, admin_update: AdminUpdate, db: Session = Depends(get_db)):
     updated_admin = update_admin(db=db, admin_id=admin_id, admin_update=admin_update)
     return updated_admin
       
@@ -138,7 +140,7 @@ def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db
 class VerifyLoansRequest(BaseModel):
     loan_ids: List[uuid.UUID]
 
-@router.get("/{admin_id}/unverified-loans", response_model=List[LoanAdmin])
+@router.get("/{admin_id}/unverified-loans", response_model=List[LoanResponse])
 def get_unverified_accounts(db: Session = Depends(get_db),
                             admin = Depends(require_roles(["Loan Officer"]))):
     loans = db.query(Loan).filter(Loan.is_verified == False).all()
@@ -158,7 +160,7 @@ def verify_accounts(request: VerifyLoansRequest, db: Session = Depends(get_db), 
     return {"detail": f"{len(accounts)} account(s) verified successfully."}
 
 
-@router.get("/{admin_id}/loans", response_model=List[LoanAdmin])
+@router.get("/{admin_id}/loans", response_model=List[LoanRes])
 def get_loans_for_admin(
     admin_id: uuid.UUID,
     db: Session = Depends(get_db),

@@ -29,7 +29,7 @@ def create_registration_endpoint(
     new_collateral = create_collateral_details(db, collateral, loan_id)
     return  { "collateral": new_collateral } 
 
-@router.get("/collateral/{collateral_id}")
+@router.get("/{collateral_id}")
 def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends(get_db)):
     collateral = db.query(Collateral).filter(Collateral.collateral_id == collateral_id).first()
     if not collateral:
@@ -37,7 +37,7 @@ def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends
     return collateral
 
 
-@router.delete("/collateral/{collateral_id}")
+@router.delete("/delete/{collateral_id}")
 def delete_collateral(collateral_id: uuid.UUID, db: Session = Depends(get_db)): 
     collateral = db.query(Collateral).filter(Collateral.collateral_id == collateral_id).first()
     if not collateral:
@@ -46,7 +46,7 @@ def delete_collateral(collateral_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Collateral deleted successfully"}
 
-@router.patch("/collateral/{collateral_id}")
+@router.patch("/update/{collateral_id}")
 def update_collateral(collateral_id: uuid.UUID, collateral_update: Collateral_schema, db: Session = Depends(get_db)):
     collateral = db.query(Collateral).filter(Collateral.collateral_id == collateral_id).first()
     if not collateral:

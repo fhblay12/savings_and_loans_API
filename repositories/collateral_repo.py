@@ -1,6 +1,5 @@
 from models.models import Loan, Collateral
 from sqlalchemy.orm import Session
-from schemas.loan_schema import LoanCreate
 from schemas.collateral_schema import Collateral_schema
 from datetime import datetime
 from core.password import hash_password, verify_password

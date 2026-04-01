@@ -58,9 +58,9 @@ def loan_payment(
     return loan
 
 @router.get("/{loan_id}/loan_payment")
-def get_loan_payment(loan_id: uuid.UUID, db: Session = Depends(get_db )):
-    payments = db.query(LoanPayment).filter(LoanPayment.loan_id == loan_id).all()
-    return payments
+def get_loan_payment(payment_id: uuid.UUID, db: Session = Depends(get_db )):
+    payments = db.query(LoanPayment).filter(LoanPayment.payment_id == payment_id).all()
+    return { "payments": payments }
 
 @router.delete("/loan_payment/{payment_id}")
 def delete_loan_payment(payment_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -72,8 +72,8 @@ def delete_loan_payment(payment_id: uuid.UUID, db: Session = Depends(get_db)):
     return {"message": "Payment deleted successfully"}
 
 @router.patch("/loan_payment/{payment_id}")
-def update_loan_payment(payment_id: uuid.UUID, payment_amount: float, db: Session = Depends(get_db)):
-    payment = db.query(LoanPayment).filter(LoanPayment.payment_id == payment_id).first()
+def update_loan_payment(loan_payment_id: uuid.UUID, payment_amount: float, db: Session = Depends(get_db)):
+    payment = db.query(LoanPayment).filter(LoanPayment.loan_payment_id == loan_payment_id).first()
     if not payment:
         raise ValueError("Payment not found")
     payment.payment_amount = Decimal(str(payment_amount))

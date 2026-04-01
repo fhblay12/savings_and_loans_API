@@ -37,27 +37,25 @@ router = APIRouter(prefix="/loan", tags=["loan"])
 #         }
 #     )
 
-@router.post("/apply/{customer_id}",  response_class=HTMLResponse)
+@router.post("/apply/{customer_id}")
 def apply_loan(
     request: Request,
     customer_id: uuid.UUID,
-    loan: LoanCreate = Depends(loan_form),
+    loan: LoanCreate,
     db: Session = Depends(get_db)
 ):
         # Pick a random account administrator
     admin = random_account_administrator(db)
     if not admin:
-        return templates.TemplateResponse(
-            "loan_error.html",
-            {"request": request, "error": "No account administrator available."}
-        )
+        return{"request": request, "error": "No account administrator available."}
+        
     #toc = loan_data.created_date + relativedelta(months=loan_data.loan_term)
     new_loan = create_loan_details(db, loan, admin, customer_id)
 
-    return RedirectResponse(
-        url=f"/loan/apply/{new_loan.loan_id}/collateral",
-        status_code=303
-    )
+    return{
+            "message": "Loan application submitted successfully",
+            "loan": new_loan
+        }
 
 @router.patch("/update/{loan_id}")
 def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depends(get_db)):
@@ -74,4 +72,9 @@ def delete_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)):
     return {"message": "Loan deleted successfully"}
 
 
-
+@router.get("/{loan_id}")
+def get_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)):
+    loan = db.query(Loan).filter(Loan.loan_id == loan_id).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    return loan

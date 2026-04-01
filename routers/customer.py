@@ -12,7 +12,6 @@ from services.customer_loan_payment_services import standard_loan_payment
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import Customer, Transactions, SavingsAccount, Loan, LoanPayment
-from schemas.loan_schema import LoanResponse 
 from database import get_db
 from typing import List                                                                                                                                                                                                                                                                                                                                                                                                                             
 from fastapi import APIRouter, HTTPException, Depends
@@ -120,46 +119,3 @@ def refresh_token_endpoint(refresh_token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
     
 
-
-
-@router.post("/{customer_id}/loan_payment")
-def loan_payment(
-    loan_id: uuid.UUID,
-    payment_amount: float,
-    payment_type: str,
-    db: Session = Depends(get_db)
-):
-
-    payment_amount = Decimal(str(payment_amount))
-    payment_type=payment_type.capitalize()
-    loan = (
-        db.query(Loan)
-        .filter(Loan.loan_id == loan_id)
-        .first()
-    )
-
-    if not loan:
-        raise ValueError("Loan not found")
-
-    # Update balance correctly
-    if payment_type == "Standard":
-        standard_loan_payment(loan, payment_amount) 
-
-    else:
-        raise ValueError("Invalid transaction type")
-
-    # Create transaction record
-    payment = LoanPayment(
-        loan_id=loan_id,
-        payment_amount=payment_amount,
-        payment_type=payment_type,
-        
-    )
-
-    db.add(payment)
-
-    # Commit BOTH changes together
-    db.commit()
-    db.refresh(loan)
-
-    return loan
