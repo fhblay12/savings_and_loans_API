@@ -13,3 +13,4 @@ python-jose
 pydantic[email]
 python-dateutil
 requests
+python-multipart
