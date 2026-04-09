@@ -28,7 +28,6 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(customer.router)
 app.include_router(employment_details.router)
