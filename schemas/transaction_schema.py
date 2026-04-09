@@ -11,3 +11,8 @@ class Transaction(BaseModel):
     account_id: uuid.UUID
     transaction_type: str
     amount_to_be_withdrawn_or_added: Decimal
+
+
+class TransactionUpdate(BaseModel):
+    transaction_type: Optional[str] = None
+    amount_to_be_withdrawn_or_added: Optional[Decimal] = None

@@ -3,7 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from repositories.savings_account_repo import create_savings_account_repo, update_savings_account
+from repositories.savings_account_repo import create_savings_account_repo, update_savings_account, get_savings_accounts, get_savings_account_by_id, delete_savings_account
+from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountUpdate
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import EmploymentDetails, SavingsAccount
@@ -24,11 +25,14 @@ def create_savings_account(
     db: Session = Depends(get_db),
 
 ):
-    return create_savings_account_repo(db, account)
+    try:
+        return create_savings_account_repo(db, account)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{account_id}")
 def get_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db)):
-    account = db.query(SavingsAccount).filter(SavingsAccount.account_id == account_id).first()
+    account = get_savings_account_by_id(db, account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Savings account not found")
     return account
@@ -36,13 +40,13 @@ def get_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db)):
 @router.patch("/update/{account_id}")
 def update_savings_accounts(account_id: uuid.UUID, account_update: SavingsAccountUpdate, db: Session = Depends(get_db)):
     updated_account = update_savings_account(db=db, account_id=account_id, account_update=account_update)
+    if not updated_account:
+        raise HTTPException(status_code=404, detail="Savings account not found")    
     return updated_account
 
 @router.delete("/delete/{account_id}")
 def delete_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db)):  
-    account = db.query(SavingsAccount).filter(SavingsAccount.account_id == account_id).first()
+    account = delete_savings_account(db, account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Savings account not found")
-    db.delete(account)
-    db.commit()
     return {"message": "Savings account deleted successfully"}

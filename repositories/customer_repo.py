@@ -7,7 +7,16 @@ from datetime import datetime
 from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from database import SessionLocal
+from fastapi import APIRouter, HTTPException, Depends, logger
+logger = logger.getLogger(__name__)
+from log_conf import init_logging
+init_logging()
 def create_customer(db: Session, customer_data:CustomerCreate):
     hashed_pw = hash_password(customer_data.password)
     new_member = Customer(
@@ -22,8 +31,10 @@ def create_customer(db: Session, customer_data:CustomerCreate):
         credit_score=customer_data.credit_score,
         password=hashed_pw
     )
-    print(f"Password type: {type(customer_data.password)}, length: {len(customer_data.password)}")
-    
+    if not isinstance(customer_data.password, str):
+        logger.error(f"Password is not a string: {customer_data.password} (type: {type(customer_data.password)})")
+        raise ValueError("Password must be a string")
+    logger.info(f"Creating customer with email: {customer_data.email}, name: {customer_data.first_name} {customer_data.last_name}")
     db.add(new_member)
     db.commit()
     db.refresh(new_member)
@@ -33,13 +44,14 @@ def update_customer(db: Session, customer_id: uuid.UUID, customer_update: Custom
     db_customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
 
     if not db_customer:
-        return None
+        logger.warning(f"Customer with ID {customer_id} not found for update")
+        raise ValueError("Customer not found")
 
     update_data = customer_update.dict(exclude_unset=True)
 
     for key, value in update_data.items():
         setattr(db_customer, key, value)
-
+    logger.info(f"Updated customer with ID {customer_id} with data: {update_data}")
     db.commit()
     db.refresh(db_customer)
 
@@ -50,17 +62,35 @@ def customer_login(db: Session, customer_data: LoginRequest):
     customer = db.query(Customer).filter(Customer.email == customer_data.email).first()
 
     if not customer:
-        return None
+        logger.warning(f"Login failed for email {customer_data.email}: user not found")
+        raise ValueError("Invalid email or password")
 
     # verify password
     if not verify_password(customer_data.password, customer.password):
-        return None
+        logger.warning(f"Login failed for email {customer_data.email}: invalid password")
+        raise ValueError("Invalid email or password")
 
     return customer
 
+def delete_customer(db: Session, customer_id: uuid.UUID):
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
+
+    if not customer:
+        logger.warning(f"Customer with ID {customer_id} not found for deletion")
+        raise ValueError("Customer not found")
+
+    db.delete(customer)
+    db.commit()
+    logger.info(f"Deleted customer with ID {customer_id}")
+    return customer
 
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
-    return db.query(Customer).filter(Customer.id == customer_id).first()
+    user =db.query(Customer).filter(Customer.customer_id == customer_id).first()
+    if not user:
+        logger.warning(f"Customer with ID {customer_id} not found")
+        raise ValueError("Customer not found")
+    logger.info(f"Retrieved customer with ID {customer_id}: {user.first_name} {user.last_name}")
+    return user
 
 def get_savings_accounts(db: Session, customer_id: uuid.UUID):
     # Query the account
@@ -71,9 +101,11 @@ def get_savings_accounts(db: Session, customer_id: uuid.UUID):
     )
 
     if not account:
-        return None  # or raise HTTPException(status_code=404)
+        logger.warning(f"Savings account for customer with ID {customer_id} not found")
+        raise ValueError("Savings account not found")
 
     # Simply return the ORM object
+    logger.info(f"Retrieved savings account for customer with ID {customer_id}: Account ID {account.account_id}, Balance {account.balance}")
     return account  # ✅ Pydantic can convert it with from_attributes=True
 
 def get_loans(db: Session, customer_id: uuid.UUID):
@@ -85,8 +117,9 @@ def get_loans(db: Session, customer_id: uuid.UUID):
     )
 
     if not loans:
-        return None  # or raise HTTPException(status_code=404)
-
+        logger.warning(f"Loans for customer with ID {customer_id} not found")
+        raise ValueError("Loans not found")
+    logger.info(f"Retrieved {len(loans)} loans for customer with ID {customer_id}")
     # Simply return the ORM object
     return loans 
 

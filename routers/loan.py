@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.loan_schema import LoanCreate, LoanUpdate, loan_form
 from schemas.collateral_schema import Collateral_schema, collateral_form
-from repositories.loan_repo import create_loan_details, create_collateral, update_loan_details
+from repositories.loan_repo import create_loan_details, create_collateral, get_loan_by_id, update_loan_details
 from repositories.admin_repo import random_account_administrator
 from repositories.collateral_repo import create_collateral_details
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
@@ -45,9 +45,10 @@ def apply_loan(
     db: Session = Depends(get_db)
 ):
         # Pick a random account administrator
-    admin = random_account_administrator(db)
-    if not admin:
-        return{"request": request, "error": "No account administrator available."}
+    try:
+        admin = random_account_administrator(db)
+    except Exception as e:
+        return{"request": request, "error": str(e)}
         
     #toc = loan_data.created_date + relativedelta(months=loan_data.loan_term)
     new_loan = create_loan_details(db, loan, admin, customer_id)
@@ -59,22 +60,25 @@ def apply_loan(
 
 @router.patch("/update/{loan_id}")
 def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depends(get_db)):
-    updated_loan = update_loan_details(db=db, loan_id=loan_id, loan_update=loan_update)
-    return updated_loan
+    try:
+        updated_loan = update_loan_details(db=db, loan_id=loan_id, loan_update=loan_update)
+        return updated_loan
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/delete/{loan_id}")
 def delete_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)): 
-    loan = db.query(Loan).filter(Loan.loan_id == loan_id).first()
-    if not loan:
-        raise HTTPException(status_code=404, detail="Loan not found")
-    db.delete(loan)
-    db.commit()
-    return {"message": "Loan deleted successfully"}
+    try:
+        loan = delete_loan(db, loan_id)
+        return {"message": "Loan deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{loan_id}")
 def get_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)):
-    loan = db.query(Loan).filter(Loan.loan_id == loan_id).first()
-    if not loan:
-        raise HTTPException(status_code=404, detail="Loan not found")
-    return loan
+    try:
+        loan = get_loan_by_id(db, loan_id)
+        return loan
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

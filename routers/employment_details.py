@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from repositories.employment_details_repo import create_employment_details
+from repositories.employment_details_repo import create_employment_details, update_employment_details, delete_employment_details, get_member_by_id
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import EmploymentDetails
@@ -22,35 +22,33 @@ router = APIRouter(prefix="/employment_details", tags=["Employment Details"])
 
 @router.post("/employment_details")
 def create_employment_detail(employment: EmploymentCreate, db: Session = Depends(get_db)):
-    return create_employment_details(db, employment)
+    try:        
+        employment = create_employment_details(db, employment)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return employment
 
 
 @router.delete("/employment_details/{employment_id}")
 def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db    )):
-    employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == employment_id).first()
-    if not employment:
-        raise HTTPException(status_code=404, detail="Employment details not found")
-    db.delete(employment)
-    db.commit()
+    try:
+        employment = delete_employment_details(db, employment_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return {"message": "Employment details deleted successfully"}   
 
 @router.patch("/employment_details/{employment_id}")
 def update_employment_details(employment_id: uuid.UUID, employment_update: EmploymentCreate, db = Depends(get_db)):
-    employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == employment_id).first()
-    if not employment:
-        raise HTTPException(status_code=404, detail="Employment details not found")
-    employment.employer_first_name = employment_update.employer_first_name
-    employment.employer_last_name = employment_update.employer_last_name
-    employment.job_title = employment_update.job_title
-    employment.monthly_income = employment_update.monthly_income
-    employment.employment_type = employment_update.employment_type
-    db.commit()
-    db.refresh(employment)
+    try:
+        employment = update_employment_details(db, employment_id, employment_update)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return employment   
 
 @router.get("/employment_details/{employment_id}")
 def get_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db)):
-    employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == employment_id).first()
-    if not employment:
-        raise HTTPException(status_code=404, detail="Employment details not found")
+    try:
+        employment = get_member_by_id(db, employment_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return employment

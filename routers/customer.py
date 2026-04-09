@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, logger, status
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
 from fastapi import Request
@@ -7,7 +7,7 @@ from repositories import customer_repo
 from schemas.customer_schema import CustomerCreate, CustomerUpdate, customer_form
 from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
-from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans, update_customer, customer_login
+from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans, update_customer, customer_login, get_member_by_id, delete_customer
 from services.customer_loan_payment_services import standard_loan_payment
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
@@ -23,6 +23,10 @@ from decimal import Decimal
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, HTTPException, Depends, logger
+logger = logger.getLogger(__name__)
+from log_conf import init_logging
+init_logging()
 templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
@@ -37,29 +41,24 @@ router = APIRouter(prefix="/customer", tags=["Customer"])
 #    )
 @router.post("/register")
 def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends(get_db)):
-    customer=create_customer(db, customer)
-    return {
-        "message": "User registered successfully",
-        "customer": customer
-    }
+    try:
+        customer=create_customer(db, customer)
+        return {
+            "message": "User registered successfully",
+            "customer": customer
+        }
+    except ValueError as e:
+        logger.error(f"Error occurred while registering user: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-
-    user = db.query(Customer).filter(Customer.email == form_data.username).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-
-    if not verify_password(form_data.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+    try:
+        user = get_member_by_id(db, customer_id=uuid.UUID(form_data.username))  # Assuming username is the customer_id
+    except ValueError as e:
+        logger.error(f"Error occurred while logging in: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
     token = create_access_token({"sub": user.email, "id": str(user.customer_id), "type": "customer"})
 
@@ -71,8 +70,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         value=f"Bearer {token}",
         httponly=True
     )
-
-    return response
+    logger.info(f"User {user.email} logged in successfully, issued token: {token}")
+    return {
+        "user": user
+    }
 
 
 class Token(BaseModel):
@@ -82,7 +83,11 @@ class Token(BaseModel):
 
 @router.patch("/update/{customer_id}")
 def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Session = Depends(get_db)):
-    updated_customer = update_customer(db=db, customer_id=customer_id, customer_update=customer)
+    try:
+        updated_customer = update_customer(db=db, customer_id=customer_id, customer_update=customer)
+    except ValueError as e:
+        logger.error(f"Error occurred while updating customer: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     return { 
         "message": "Customer updated successfully",
         "customer": updated_customer
@@ -90,16 +95,12 @@ def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Sessi
 
 @router.delete("/delete/{customer_id}")
 def delete_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
-    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    db.delete(customer)
-    db.commit()
-
-    return {"message": "Customer deleted"}
-    
+    try:
+        delete_customer(db, customer_id)
+        logger.info(f"Customer with ID {customer_id} deleted successfully")
+    except ValueError as e:
+        logger.error(f"Error occurred while deleting customer: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
     return {"message": "Item deleted"}
 @router.post("/refresh", response_model=Token)
