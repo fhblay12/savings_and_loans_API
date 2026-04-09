@@ -13,7 +13,7 @@ sqlacodegen
 passlib[bcrypt]
 python-jose
 pydantic[email]
-dateutil.relativedelta
+python-dateutil
 jinja2
 logging
 sqlalchemy.utils
