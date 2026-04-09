@@ -13,8 +13,9 @@ from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from database import SessionLocal
-from fastapi import APIRouter, HTTPException, Depends, logger
-logger = logger.getLogger(__name__)
+from fastapi import APIRouter, HTTPException, Depends
+import logging
+logger = logging.getLogger(__name__)
 from log_conf import init_logging
 init_logging()
 def create_customer(db: Session, customer_data:CustomerCreate):

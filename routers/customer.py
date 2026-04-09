@@ -24,10 +24,7 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from fastapi.responses import RedirectResponse
 from fastapi import APIRouter, HTTPException, Depends, logger
-logger = logger.getLogger(__name__)
-from log_conf import init_logging
-init_logging()
-templates = Jinja2Templates(directory="templates")
+
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
 
@@ -48,7 +45,6 @@ def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends
             "customer": customer
         }
     except ValueError as e:
-        logger.error(f"Error occurred while registering user: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -57,7 +53,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     try:
         user = get_member_by_id(db, customer_id=uuid.UUID(form_data.username))  # Assuming username is the customer_id
     except ValueError as e:
-        logger.error(f"Error occurred while logging in: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
     token = create_access_token({"sub": user.email, "id": str(user.customer_id), "type": "customer"})
@@ -86,7 +81,6 @@ def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Sessi
     try:
         updated_customer = update_customer(db=db, customer_id=customer_id, customer_update=customer)
     except ValueError as e:
-        logger.error(f"Error occurred while updating customer: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     return { 
         "message": "Customer updated successfully",
@@ -97,9 +91,7 @@ def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Sessi
 def delete_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
         delete_customer(db, customer_id)
-        logger.info(f"Customer with ID {customer_id} deleted successfully")
     except ValueError as e:
-        logger.error(f"Error occurred while deleting customer: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
     return {"message": "Item deleted"}

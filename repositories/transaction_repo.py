@@ -1,14 +1,15 @@
 from sqlalchemy.orm import Session
 from models.models import Transactions, SavingsAccount
-from schemas.transaction_schema import TransactionCreate, TransactionUpdate
+from schemas.transaction_schema import Transaction, TransactionUpdate
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountUpdate
 from datetime import datetime
 from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from decimal import Decimal
-from fastapi import APIRouter, HTTPException, Depends, logger
-logger = logger.getLogger(__name__)
+from fastapi import APIRouter, HTTPException, Depends
+import logging
+logger = logging.getLogger(__name__)
 from log_conf import init_logging
 
 

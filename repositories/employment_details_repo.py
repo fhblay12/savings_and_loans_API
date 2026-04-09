@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy.orm import Session
 from models.models import EmploymentDetails
 from models.models import EmploymentDetails
@@ -7,9 +9,9 @@ from datetime import datetime
 from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, logger, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-logger = logger.getLogger(__name__)
+logger = logging.getLogger(__name__)
 from log_conf import init_logging
 init_logging()
 def create_employment_details(db: Session, employment_data:EmploymentCreate):

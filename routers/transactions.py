@@ -1,6 +1,6 @@
 
 
-from schemas.transaction_schema import TransactionCreate, TransactionResponse, TransactionUpdate
+from schemas.transaction_schema import Transaction, TransactionUpdate
 from repositories.transaction_repo import create_transaction, get_transactions, delete_transaction, update_transaction
 from decimal import Decimal
 import uuid

@@ -5,8 +5,9 @@ from datetime import datetime
 from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from fastapi import HTTPException, status, logger
-logger = logger.getLogger(__name__)
+from fastapi import HTTPException, status
+import logging
+logger = logging.getLogger(__name__)
 from log_conf import init_logging
 init_logging()
 def create_savings_account_repo(db: Session, account_data:SavingsAccountCreate):

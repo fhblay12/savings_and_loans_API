@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.loan_schema import LoanCreate, LoanUpdate, loan_form
 from schemas.collateral_schema import Collateral_schema, collateral_form
-from repositories.loan_repo import create_loan_details, create_collateral, get_loan_by_id, update_loan_details
+from repositories.loan_repo import create_loan_details, get_loan_by_id, update_loan_details
 from repositories.admin_repo import random_account_administrator
 from repositories.collateral_repo import create_collateral_details
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user

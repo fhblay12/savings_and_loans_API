@@ -15,7 +15,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
-from repositories.customer_repo import transaction
 from routers import collateral, customer, employment_details, savings_account, admin, loan, transactions, loan_payment
 from database import engine, Base
 

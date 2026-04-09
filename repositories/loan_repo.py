@@ -7,12 +7,12 @@ from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from dateutil.relativedelta import relativedelta
-from fastapi import APIRouter, HTTPException, Depends, logger
+from fastapi import APIRouter, HTTPException, Depends
 from database import get_db
-from repositories.loan_repo import create_loan_details, update_loan_details, get_loans, get_loan_by_id, delete_loan, create_collateral
+import logging
 from log_conf import init_logging
 init_logging()
-logger = logger.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_loan_details(db: Session, loan, admin, customer_id):

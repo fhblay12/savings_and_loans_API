@@ -6,8 +6,9 @@ from core.password import hash_password, verify_password
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from dateutil.relativedelta import relativedelta
-from fastapi import APIRouter, HTTPException, Depends, logger
-logger = logger.getLogger(__name__)
+from fastapi import APIRouter, HTTPException, Depends
+import logging
+logger =logging.getLogger(__name__)
 from log_conf import init_logging
 init_logging()
 
