@@ -59,7 +59,7 @@ def update_admins(admin_id: uuid.UUID, admin_update: AdminUpdate, db: Session = 
     return updated_admin
       
 @router.delete("/delete/{admin_id}")
-def delete_admin(admin_id: uuid.UUID, db: Session = Depends(get_db)):    
+def delete_admins(admin_id: uuid.UUID, db: Session = Depends(get_db)):    
     try:
         admin = delete_admin(db=db, admin_id=admin_id)
     except Exception as e:
