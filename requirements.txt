@@ -15,3 +15,16 @@ python-jose
 pydantic[email]
 dateutil.relativedelta
 jinja2
+logging
+sqlalchemy.utils
+sqlalchemy.orm
+sqlalchemy.dialects.postgresql
+sqlalchemy.ext.declarative
+jose
+typing
+uuid
+random
+datetime
+decimal
+dotenv
+os
