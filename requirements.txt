@@ -8,9 +8,11 @@ python-dotenv
 jinja2
 pydantic
 sqlacodegen
-passlib[bcrypt]
 python-jose
 pydantic[email]
 python-dateutil
 requests
 python-multipart
+
+passlib==1.7.4
+bcrypt==4.1.2
