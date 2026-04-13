@@ -13,4 +13,5 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(_normalize_password(password))
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    print("RAW LENGTH:", len(plain_password.encode("utf-8")))
     return pwd_context.verify(_normalize_password(plain_password), hashed_password)
