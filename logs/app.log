@@ -1,1 +1,0 @@
-INFO | 2026-04-13 14:54:03,531 | repositories.loan_payment_repo | update_loan_payment() | L101 | Updating loan payment with id 8763328e-617b-44af-b919-596a994bb3a4 for loan_id: 2a54a1bd-9aa7-4335-8fff-2eb42d008c87 with data: {'payment_amount': 10.0}
