@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from repositories.employment_details_repo import create_employment_details, update_employment_details, delete_employment_details, get_member_by_id
+from repositories.employment_details_repo import create_employment_details, update_employment_detail, delete_employment_detail, get_member_by_id
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from core.password import hash_password, verify_password
 from models.models import EmploymentDetails
@@ -32,7 +32,7 @@ def create_employment_detail(employment: EmploymentCreate, db: Session = Depends
 @router.delete("/employment_details/{employment_id}")
 def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db    )):
     try:
-        employment = delete_employment_details(db, employment_id)
+        employment = delete_employment_detail(db, employment_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return {"message": "Employment details deleted successfully"}   
@@ -40,7 +40,7 @@ def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(ge
 @router.patch("/employment_details/{employment_id}")
 def update_employment_details(employment_id: uuid.UUID, employment_update: EmploymentCreate, db = Depends(get_db)):
     try:
-        employment = update_employment_details(db, employment_id, employment_update)
+        employment = update_employment_detail(db, employment_id, employment_update)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return employment   

@@ -8,7 +8,7 @@ from fastapi import Depends, Form
 
 class Collateral_schema(BaseModel):
     collateral_type: str
-    collateral_value: str
+    collateral_value: int
 
 def collateral_form(
     collateral_type: str = Form(...),

@@ -45,7 +45,7 @@ def update_savings_accounts(account_id: uuid.UUID, account_update: SavingsAccoun
     return updated_account
 
 @router.delete("/delete/{account_id}")
-def delete_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db)):  
+def delete_savings_accounts(account_id: uuid.UUID, db: Session = Depends(get_db)):  
     account = delete_savings_account(db, account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Savings account not found")

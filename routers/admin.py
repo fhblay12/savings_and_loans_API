@@ -8,7 +8,7 @@ from database import get_db
 from models.models import Admin, SavingsAccount, Customer, Loan
 from schemas.admin_schema import AdminCreate, AdminUpdate, LoginRequest, SavingAccountAdmin, LoanAdmin
 from schemas.loan_schema import LoanRes
-from repositories.admin_repo import create_admin, login_admin, update_admin, delete_admin, get_admin_savings_accounts, get_admin_loans, get_admin_unverified_savings_accounts, verify_accounts, get_admin_unverified_loans
+from repositories.admin_repo import create_admin, login_admin, update_admin, delete_admin, get_admin_savings_accounts, get_admin_loans, get_admin_unverified_savings_accounts, verify_account, get_admin_unverified_loan, verify_loan
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user, get_current_admin
 from core.password import hash_password, verify_password
 import uuid
@@ -118,7 +118,7 @@ def get_unverified_accounts(admin_id: uuid.UUID, db: Session = Depends(get_db), 
 @router.put("/{admin_id}/verify-accounts")
 def verify_accounts(request: VerifyAccountsRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Account Administrator"]))):
     try:
-        verify_accounts(db, request.account_ids)
+        verify_account(db, request.account_ids)
         return {"detail": f"{len(request.account_ids)} account(s) verified successfully."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -127,10 +127,10 @@ class VerifyLoansRequest(BaseModel):
     loan_ids: List[uuid.UUID]
 
 @router.get("/{admin_id}/unverified-loans", response_model=List[LoanResponse])
-def get_unverified_accounts(db: Session = Depends(get_db),
+def get_unverified_loans(admin_id: uuid.UUID, db: Session = Depends(get_db),
                             admin = Depends(require_roles(["Loan Officer"]))):
     try:
-        loans = get_admin_unverified_loans(db, admin.admin_id)
+        loans = get_admin_unverified_loan(db, admin_id)
         return loans
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -138,7 +138,7 @@ def get_unverified_accounts(db: Session = Depends(get_db),
 @router.put("/{admin_id}/verify-loans")
 def verify_accounts(request: VerifyLoansRequest, db: Session = Depends(get_db), admin = Depends(require_roles(["Loan Officer"]))):
     try:
-        verify_accounts(db, request.loan_ids)
+        verify_loan(db, request.loan_ids)
         return {"detail": f"{len(request.loan_ids)} loan(s) verified successfully."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

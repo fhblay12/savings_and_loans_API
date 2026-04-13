@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas.loan_schema import LoanCreate, LoanUpdate, loan_form
 from schemas.collateral_schema import Collateral_schema, collateral_form
-from repositories.loan_repo import create_loan_details, get_loan_by_id, update_loan_details
+from repositories.loan_repo import create_loan_details, get_loan_by_id, update_loan_details, delete_loan, get_loans
 from repositories.admin_repo import random_account_administrator
 from repositories.collateral_repo import create_collateral_details
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
@@ -67,7 +67,7 @@ def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depen
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/delete/{loan_id}")
-def delete_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)): 
+def delete_loans(loan_id: uuid.UUID, db: Session = Depends(get_db)): 
     try:
         loan = delete_loan(db, loan_id)
         return {"message": "Loan deleted successfully"}

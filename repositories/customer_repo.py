@@ -70,7 +70,7 @@ def customer_login(db: Session, customer_data: LoginRequest):
     if not verify_password(customer_data.password, customer.password):
         logger.warning(f"Login failed for email {customer_data.email}: invalid password")
         raise ValueError("Invalid email or password")
-
+    logger.info(f"Customer {customer.email} logged in successfully")
     return customer
 
 def delete_customer(db: Session, customer_id: uuid.UUID):

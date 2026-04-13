@@ -7,7 +7,7 @@ from requests import Session
 from starlette.responses import HTMLResponse
 from database import get_db
 from models.models import Collateral
-from repositories.collateral_repo import create_collateral_details, get_collateral_by_id, delete_collateral
+from repositories.collateral_repo import create_collateral_details, get_collateral_by_id, delete_collateral, update_collateral
 from schemas.collateral_schema import Collateral_schema, collateral_form
 from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_current_user
 from fastapi import APIRouter, HTTPException, Depends
@@ -45,7 +45,7 @@ def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends
 
 
 @router.delete("/delete/{collateral_id}")
-def delete_collateral(collateral_id: uuid.UUID, db: Session = Depends(get_db)): 
+def delete_collaterals(collateral_id: uuid.UUID, db: Session = Depends(get_db)): 
     try:
         collateral = delete_collateral(db, collateral_id)
     except HTTPException as e:
@@ -55,7 +55,7 @@ def delete_collateral(collateral_id: uuid.UUID, db: Session = Depends(get_db)):
     return {"message": "Collateral deleted successfully"}
 
 @router.patch("/update/{collateral_id}")
-def update_collateral(collateral_id: uuid.UUID, collateral_update: Collateral_schema, db: Session = Depends(get_db)):
+def update_collaterals(collateral_id: uuid.UUID, collateral_update: Collateral_schema, db: Session = Depends(get_db)):
     try:
         collateral = update_collateral(db, collateral_id, collateral_update)
     except Exception as e:

@@ -213,14 +213,14 @@ def get_admin_loans(db: Session, admin_id: uuid.UUID):
         for loan in loans
     ]
 
-def get_admin_unverified_loans(db: Session, admin_id: uuid.UUID):
+def get_admin_unverified_loan(db: Session, admin_id: uuid.UUID):
 
 
     loans = (
         db.query(Loan)
         .join(Loan.customer)
         .filter(Loan.admin_id == admin_id)
-        .filter(Loan.is_verified == 0)
+        .filter(Loan.is_verified == False)
         .all()
     )
     if not loans:
@@ -240,7 +240,7 @@ def get_admin_unverified_loans(db: Session, admin_id: uuid.UUID):
     logger.info(f"{len(result)} unverified loan(s) found for admin with ID {admin_id}")
     return result
 
-def verify_accounts(db: Session, account_ids: List[uuid.UUID]):
+def verify_account(db: Session, account_ids: List[uuid.UUID]):
     accounts = db.query(SavingsAccount).filter(SavingsAccount.account_id.in_(account_ids)).all()
 
     if not accounts:
@@ -253,3 +253,17 @@ def verify_accounts(db: Session, account_ids: List[uuid.UUID]):
     db.commit()
     logger.info(f"{len(accounts)} account(s) verified successfully with IDs: {[str(account.account_id) for account in accounts]}")
     return accounts
+
+def verify_loan(db: Session, loan_ids: List[uuid.UUID]):
+    loans = db.query(Loan).filter(Loan.loan_id.in_(loan_ids)).all()
+
+    if not loans:
+        logger.warning(f"Attempted to verify loans with IDs {loan_ids}, but no loans were found")
+        raise ValueError("No loans found with the provided IDs")
+
+    for loan in loans:
+        loan.is_verified = True
+
+    db.commit()
+    logger.info(f"{len(loans)} loan(s) verified successfully with IDs: {[str(loan.loan_id) for loan in loans]}")
+    return loans

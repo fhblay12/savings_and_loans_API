@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi import Request
 from database import SessionLocal
 from repositories import customer_repo
-from schemas.customer_schema import CustomerCreate, CustomerUpdate, customer_form
+from schemas.customer_schema import CustomerCreate, CustomerUpdate, LoginRequest, customer_form
 from schemas.transaction_schema import Transaction
 from schemas.savings_account_schema import SavingsAccountCreate, SavingsAccountResponse
 from repositories.customer_repo import create_customer, get_savings_accounts, transaction, get_loans, update_customer, customer_login, get_member_by_id, delete_customer
@@ -23,7 +23,7 @@ from decimal import Decimal
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from fastapi.responses import RedirectResponse
-from fastapi import APIRouter, HTTPException, Depends, logger
+from fastapi import APIRouter, HTTPException, Depends
 
 
 router = APIRouter(prefix="/customer", tags=["Customer"])
@@ -51,7 +51,7 @@ def create_registration_endpoint(customer: CustomerCreate, db: Session = Depends
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     try:
-        user = get_member_by_id(db, customer_id=uuid.UUID(form_data.username))  # Assuming username is the customer_id
+        user = customer_login(db, LoginRequest(email=form_data.username, password=form_data.password))    
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -65,7 +65,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         value=f"Bearer {token}",
         httponly=True
     )
-    logger.info(f"User {user.email} logged in successfully, issued token: {token}")
+
     return {
         "user": user
     }
@@ -88,7 +88,7 @@ def update_customers(customer_id: uuid.UUID, customer: CustomerUpdate, db: Sessi
     }
 
 @router.delete("/delete/{customer_id}")
-def delete_customer(customer_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_customers(customer_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
         delete_customer(db, customer_id)
     except ValueError as e:

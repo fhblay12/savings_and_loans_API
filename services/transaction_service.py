@@ -5,14 +5,12 @@ import uuid
 
 from models.models import SavingsAccount, Transactions
 
-
-from sqlalchemy import Transaction
+from sqlalchemy.orm import Session
+from repositories.transaction_repo import create_transaction, get_transaction, delete_transaction, update_transaction
 from sqlalchemy.orm import Session
 
 
-def make_transaction (db: Session, account_id: uuid.UUID, amount: float, tx_type: str):
-    amount = Decimal(str(amount))
-    tx_type=tx_type.capitalize()
+def make_transaction (db: Session, account_id: uuid.UUID, amount: Decimal, tx_type: str):
     account = (
         db.query(SavingsAccount)
         .filter(SavingsAccount.account_id == account_id)

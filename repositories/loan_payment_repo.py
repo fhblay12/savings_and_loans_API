@@ -19,35 +19,35 @@ import logging
 logger = logging.getLogger(__name__)
 from log_conf import init_logging
 init_logging()
+from fastapi import APIRouter, Depends, HTTPException
 
-def create_loan_payment(db: Session, loan_payment_data: LoanPayments):
-    new_payment = LoanPayment(
-        loan_id=loan_payment_data.loan_id,
-        payment_amount=loan_payment_data.payment_amount,
-        payment_date=datetime.utcnow()
-    )
+def create_loan_payment(db: Session, loan_payment_data: LoanPayments, loan_id: uuid.UUID):
+  
     payment_amount = Decimal(str(loan_payment_data.payment_amount)) 
     payment_type=loan_payment_data.payment_type.capitalize()
     loan = (
         db.query(Loan)
-        .filter(Loan.loan_id == loan_payment_data.loan_id)
+        .filter(Loan.loan_id == loan_id)
         .first()
     )
-
+    
     if not loan:
-        logger.warning(f"Loan with id {loan_payment_data.loan_id} not found for payment.")
-        raise ValueError("Loan not found")
-
+        logger.warning(f"Loan with id {loan_id} not found for payment.")
+        raise HTTPException(status_code=404, detail="Loan not found")
+    if loan.interest_rate is None:
+        logger.warning(f"Loan with id {loan.loan_id} has no interest rate defined. Needs to be verified by admin before payments can be applied.")
+        raise HTTPException(status_code=400, detail="Loan has no interest rate defined")
+    print(f"Loan found for payment: {loan}")
     # Update balance correctly
     if payment_type == "Standard":
         standard_loan_payment(loan, payment_amount) 
 
     else:
-        raise ValueError("Invalid transaction type")
+        raise HTTPException(status_code=400, detail="Invalid payment type. Only 'Standard' is supported.")
 
     # Create transaction record
     payment = LoanPayment(
-        loan_id=loan_payment_data.loan_id,
+        loan_id=loan_id,
         payment_amount=payment_amount,
         payment_type=payment_type,
         
@@ -59,37 +59,37 @@ def create_loan_payment(db: Session, loan_payment_data: LoanPayments):
     db.commit()
     db.refresh(loan)
     db.refresh(payment)
-    logger.info(f"Loan payment created successfully for loan_id: {loan_payment_data.loan_id} with payment_id: {payment.payment_id}")
-    return new_payment
+    logger.info(f"Loan payment created successfully for loan_id: {loan_id}. Payment amount: {payment_amount}, Payment type: {payment_type}. Updated loan amount: {loan.loan_amount}")
+    return payment
 
-def get_loan_payment(db: Session, payment_id: uuid.UUID):
-    payment = db.query(LoanPayment).filter(LoanPayment.payment_id == payment_id).first()
+def get_loan_payment(payment_id: uuid.UUID, db: Session): 
+    payment = db.query(LoanPayment).filter(LoanPayment.loan_payment_id == payment_id).first()
     if not payment:
         logger.warning(f"Loan payment with id {payment_id} not found.")
         raise HTTPException(status_code=404, detail="Loan payment not found")
     logger.info(f"Retrieved loan payment with id {payment_id} for loan_id: {payment.loan_id}")
     return payment
 
-def get_loan_payments_by_loan(db: Session, loan_id: uuid.UUID):
+def get_loan_payments_by_loan(loan_id: uuid.UUID, db: Session):
     payment=db.query(LoanPayment).filter(LoanPayment.loan_id == loan_id).all()
     if not payment:
         logger.info(f"No loan payments found for loan_id: {loan_id}")
-        raise ValueError(f"No loan payments found for loan_id: {loan_id}")
+        raise HTTPException(status_code=404, detail="No loan payments found for the specified loan")
     logger.info(f"Fetching loan payments for loan_id: {loan_id}")
     return payment
 
-def delete_loan_payment(db: Session, payment_id: uuid.UUID):
-    payment = db.query(LoanPayment).filter(LoanPayment.payment_id == payment_id).first()
+def delete_loan_payment(payment_id: uuid.UUID, db: Session):
+    payment = db.query(LoanPayment).filter(LoanPayment.loan_payment_id == payment_id).first()
     if not payment:
         logger.info(f"Loan payment with id {payment_id} not found for deletion.")
-        raise ValueError(f"Loan payment with id {payment_id} not found for deletion.")
+        raise HTTPException(status_code=404, detail="Loan payment not found for deletion.")
     logger.info(f"Deleting loan payment with id {payment_id} for loan_id: {payment.loan_id}")
     db.delete(payment)
     db.commit()
     return True
 
 def update_loan_payment(db: Session, payment_id: uuid.UUID, loan_payment_data: LoanPayments):
-    payment = db.query(LoanPayment).filter(LoanPayment.payment_id == payment_id).first()
+    payment = db.query(LoanPayment).filter(LoanPayment.loan_payment_id == payment_id).first()
     if not payment:
         logger.info(f"Loan payment with id {payment_id} not found for update.")
         raise ValueError(f"Loan payment with id {payment_id} not found for update.")

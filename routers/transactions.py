@@ -1,7 +1,9 @@
 
 
+from typing import Literal
+
 from schemas.transaction_schema import Transaction, TransactionUpdate
-from repositories.transaction_repo import create_transaction, get_transactions, delete_transaction, update_transaction
+from repositories.transaction_repo import create_transaction, get_transaction, delete_transaction, update_transaction
 from decimal import Decimal
 import uuid
 from services.transaction_service import make_transaction
@@ -15,12 +17,12 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 @router.post("/{customer_id}/transaction")
 def create_transactions(
     account_id: uuid.UUID,
-    amount: float,
-    tx_type: str,
+    amount: Decimal,
+    tx_type: Literal["Deposit", "Withdrawal"],
     db: Session = Depends(get_db)
 ):
     try:
-        return make_transaction(account_id, amount, tx_type, db)
+        return make_transaction(db, account_id, amount, tx_type)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -28,7 +30,7 @@ def create_transactions(
 @router.get("/{account_id}/transactions")
 def get_transactions(transaction_id: uuid.UUID, db: Session = Depends(get_db)): 
     try:
-        transactions = get_transactions(db, transaction_id)
+        transactions = get_transaction(db, transaction_id)
         return { "transactions": transactions }
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -44,7 +46,7 @@ def delete_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db))
      
 
 @router.patch("/transaction/{transaction_id}")
-def update_transaction(transaction_update: TransactionUpdate, transaction_id: uuid.UUID, db: Session = Depends(get_db)):
+def update_transactions(transaction_update: TransactionUpdate, transaction_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
         transaction = update_transaction(db, transaction_id, transaction_update.amount_to_be_withdrawn_or_added, transaction_update.transaction_type)
         return {"message": "Transaction updated successfully", "transaction": transaction}

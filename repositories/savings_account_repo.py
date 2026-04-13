@@ -12,14 +12,6 @@ from log_conf import init_logging
 init_logging()
 def create_savings_account_repo(db: Session, account_data:SavingsAccountCreate):
     try:
-        existing_account = db.query(SavingsAccount).filter(SavingsAccount.customer_id == account_data.customer_id).first()
-        if existing_account:
-            logger.warning(f"Customer {account_data.customer_id} already has a savings account.")
-            raise ValueError(f"Customer {account_data.customer_id} already has a savings account.")
-    except Exception as e:
-        logger.error(f"Error checking existing account for customer {account_data.customer_id}: {str(e)}")
-        raise ValueError(f"Error checking existing account for customer {account_data.customer_id}: {str(e)}")
-    try:
         new_member = SavingsAccount(
             customer_id=account_data.customer_id,
             balance=account_data.balance,

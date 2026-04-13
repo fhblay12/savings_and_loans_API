@@ -35,12 +35,12 @@ def create_transaction(account_id: uuid.UUID, amount: float, tx_type: str, db: S
     logger.info(f"Transaction created successfully for account_id: {account_id} with transaction_id: {new_transaction.transaction_id}") 
     return new_transaction
 
-def get_transactions(db: Session, transaction_id: uuid.UUID):
-    transaction = db.query(Transactions).filter(Transactions.transaction_id == transaction_id).all()
+def get_transaction(db: Session, transaction_id: uuid.UUID):
+    transaction = db.query(Transactions).filter(Transactions.transaction_id == transaction_id).first()
     if not transaction:
         logger.info(f"No transactions found for transaction_id: {transaction_id}")
         raise ValueError(f"No transactions found for transaction_id: {transaction_id}")
-    logger.info(f"Retrieved {len(transaction)} transactions for transaction_id: {transaction_id}")
+    logger.info(f"Retrieved transaction for transaction_id: {transaction_id}")
     return transaction
 
 def delete_transaction(db: Session, transaction_id: uuid.UUID):
@@ -62,7 +62,7 @@ def update_transaction(db: Session, transaction_id: uuid.UUID, amount: float, tx
     
     # Update transaction details
     transaction.amount_to_be_withdrawn_or_added = Decimal(str(amount))
-    transaction.transaction_type = tx_type.capitalize()
+    transaction.transaction_type = tx_type
     
     db.commit()
     db.refresh(transaction)

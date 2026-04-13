@@ -34,9 +34,9 @@ def create_employment_details(db: Session, employment_data:EmploymentCreate):
     db.refresh(new_member)
     return new_member
 
-def update_employment_details(db: Session, employment_id: uuid.UUID, employment_update: EmploymentUpdate):
+def update_employment_detail(db: Session, employment_id: uuid.UUID, employment_update: EmploymentUpdate):
     try:
-        employment = db.query(EmploymentDetails).filter(EmploymentDetails.id == employment_id).first()
+        employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == employment_id).first()
     except Exception as e:
         logger.error(f"Error occurred while fetching employment details: {e}")
         raise ValueError("Failed to fetch employment details")
@@ -53,7 +53,7 @@ def update_employment_details(db: Session, employment_id: uuid.UUID, employment_
     logger.info(f"Updated employment details with ID {employment_id}")
     return employment
 
-def delete_employment_details(db: Session, employment_id: uuid.UUID):
+def delete_employment_detail(db: Session, employment_id: uuid.UUID):
     try:
         employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == employment_id).first()
     except Exception as e:
@@ -68,7 +68,7 @@ def delete_employment_details(db: Session, employment_id: uuid.UUID):
 
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
     try:
-        employment = db.query(EmploymentDetails).filter(EmploymentDetails.id == customer_id).first()
+        employment = db.query(EmploymentDetails).filter(EmploymentDetails.employment_details_id == customer_id).first()
     except Exception as e:
         logger.error(f"Error occurred while fetching employment details: {e}")
         raise ValueError("Failed to fetch employment details")
