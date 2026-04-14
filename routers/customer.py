@@ -57,19 +57,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     token = create_access_token({"sub": user.email, "id": str(user.customer_id), "type": "customer"})
 
-    response = RedirectResponse(url=f"/customer/{user.customer_id}/savings-account", status_code=303)
-
-    # ✅ Store token in cookie
-    response.set_cookie(
-        key="access_token",
-        value=f"Bearer {token}",
-        httponly=True
-    )
 
     return {
-        "user": user
-    }
-
+    "access_token": token,
+    "token_type": "bearer"
+}
 
 class Token(BaseModel):
     access_token: str
