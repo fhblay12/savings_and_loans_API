@@ -21,7 +21,7 @@ router = APIRouter(prefix="/employment_details", tags=["Employment Details"])
 
 
 @router.post("/employment_details")
-def create_employment_detail(employment: EmploymentCreate, db: Session = Depends(get_db)):
+def create_employment_detail(employment: EmploymentCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:        
         employment = create_employment_details(db, employment)
     except ValueError as e:
@@ -30,7 +30,7 @@ def create_employment_detail(employment: EmploymentCreate, db: Session = Depends
 
 
 @router.delete("/employment_details/{employment_id}")
-def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db    )):
+def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         employment = delete_employment_detail(db, employment_id)
     except ValueError as e:
@@ -38,7 +38,7 @@ def delete_employment_details(employment_id: uuid.UUID, db: Session = Depends(ge
     return {"message": "Employment details deleted successfully"}   
 
 @router.patch("/employment_details/{employment_id}")
-def update_employment_details(employment_id: uuid.UUID, employment_update: EmploymentCreate, db = Depends(get_db)):
+def update_employment_details(employment_id: uuid.UUID, employment_update: EmploymentCreate, db = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         employment = update_employment_detail(db, employment_id, employment_update)
     except ValueError as e:
@@ -46,7 +46,7 @@ def update_employment_details(employment_id: uuid.UUID, employment_update: Emplo
     return employment   
 
 @router.get("/employment_details/{employment_id}")
-def get_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_employment_details(employment_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         employment = get_member_by_id(db, employment_id)
     except ValueError as e:

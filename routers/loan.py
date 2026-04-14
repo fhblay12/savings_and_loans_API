@@ -42,7 +42,8 @@ def apply_loan(
     request: Request,
     customer_id: uuid.UUID,
     loan: LoanCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
         # Pick a random account administrator
     try:
@@ -59,7 +60,7 @@ def apply_loan(
         }
 
 @router.patch("/update/{loan_id}")
-def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depends(get_db)):
+def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         updated_loan = update_loan_details(db=db, loan_id=loan_id, loan_update=loan_update)
         return updated_loan
@@ -67,7 +68,7 @@ def update_loan(loan_id: uuid.UUID, loan_update: LoanUpdate, db: Session = Depen
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/delete/{loan_id}")
-def delete_loans(loan_id: uuid.UUID, db: Session = Depends(get_db)): 
+def delete_loans(loan_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         loan = delete_loan(db, loan_id)
         return {"message": "Loan deleted successfully"}
@@ -76,7 +77,7 @@ def delete_loans(loan_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.get("/{loan_id}")
-def get_loan(loan_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_loan(loan_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         loan = get_loan_by_id(db, loan_id)
         return loan

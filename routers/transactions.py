@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+from core.security import get_current_user
 from schemas.transaction_schema import Transaction, TransactionUpdate
 from repositories.transaction_repo import create_transaction, get_transaction, delete_transaction, update_transaction
 from decimal import Decimal
@@ -19,7 +20,8 @@ def create_transactions(
     account_id: uuid.UUID,
     amount: Decimal,
     tx_type: Literal["Deposit", "Withdrawal"],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     try:
         return make_transaction(db, account_id, amount, tx_type)
@@ -28,7 +30,7 @@ def create_transactions(
 
 
 @router.get("/{account_id}/transactions")
-def get_transactions(transaction_id: uuid.UUID, db: Session = Depends(get_db)): 
+def get_transactions(transaction_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)): 
     try:
         transactions = get_transaction(db, transaction_id)
         return { "transactions": transactions }
@@ -37,7 +39,7 @@ def get_transactions(transaction_id: uuid.UUID, db: Session = Depends(get_db)):
     
 
 @router.delete("/transaction/{transaction_id}")
-def delete_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         delete_transaction(db, transaction_id)
         return {"message": "Transaction deleted successfully"} 
@@ -46,7 +48,7 @@ def delete_transaction(transaction_id: uuid.UUID, db: Session = Depends(get_db))
      
 
 @router.patch("/transaction/{transaction_id}")
-def update_transactions(transaction_update: TransactionUpdate, transaction_id: uuid.UUID, db: Session = Depends(get_db)):
+def update_transactions(transaction_update: TransactionUpdate, transaction_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         transaction = update_transaction(db, transaction_id, transaction_update.amount_to_be_withdrawn_or_added, transaction_update.transaction_type)
         return {"message": "Transaction updated successfully", "transaction": transaction}

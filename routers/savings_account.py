@@ -23,6 +23,7 @@ router = APIRouter(prefix="/savings_account", tags=["Savings_account"])
 def create_savings_account(
     account: SavingsAccountCreate,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 
 ):
     try:
@@ -31,21 +32,21 @@ def create_savings_account(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{account_id}")
-def get_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_savings_account(account_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     account = get_savings_account_by_id(db, account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Savings account not found")
     return account
 
 @router.patch("/update/{account_id}")
-def update_savings_accounts(account_id: uuid.UUID, account_update: SavingsAccountUpdate, db: Session = Depends(get_db)):
+def update_savings_accounts(account_id: uuid.UUID, account_update: SavingsAccountUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     updated_account = update_savings_account(db=db, account_id=account_id, account_update=account_update)
     if not updated_account:
         raise HTTPException(status_code=404, detail="Savings account not found")    
     return updated_account
 
 @router.delete("/delete/{account_id}")
-def delete_savings_accounts(account_id: uuid.UUID, db: Session = Depends(get_db)):  
+def delete_savings_accounts(account_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):  
     account = delete_savings_account(db, account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Savings account not found")

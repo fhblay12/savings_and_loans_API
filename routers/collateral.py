@@ -34,7 +34,7 @@ def create_registration_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{collateral_id}")
-def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends(get_db)):
+def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         collateral = get_collateral_by_id(db, collateral_id)
         return collateral
@@ -45,7 +45,7 @@ def collateral(request: Request, collateral_id: uuid.UUID, db: Session = Depends
 
 
 @router.delete("/delete/{collateral_id}")
-def delete_collaterals(collateral_id: uuid.UUID, db: Session = Depends(get_db)): 
+def delete_collaterals(collateral_id: uuid.UUID, db: Session = Depends(get_db), current_user = Depends(get_current_user)): 
     try:
         collateral = delete_collateral(db, collateral_id)
     except HTTPException as e:
@@ -55,7 +55,7 @@ def delete_collaterals(collateral_id: uuid.UUID, db: Session = Depends(get_db)):
     return {"message": "Collateral deleted successfully"}
 
 @router.patch("/update/{collateral_id}")
-def update_collaterals(collateral_id: uuid.UUID, collateral_update: Collateral_schema, db: Session = Depends(get_db)):
+def update_collaterals(collateral_id: uuid.UUID, collateral_update: Collateral_schema, db: Session = Depends(get_db), value: str = Depends(collateral_form), current_user = Depends(get_current_user)):
     try:
         collateral = update_collateral(db, collateral_id, collateral_update)
     except Exception as e:
