@@ -66,7 +66,7 @@ def customer_login(db: Session, customer_data: LoginRequest):
     if not customer:
         logger.warning(f"Login failed for email {customer_data.email}: user not found")
         raise ValueError("Invalid email or password")
-    token = crea
+    
     # verify password
     if not verify_password(customer_data.password, customer.password):
         logger.warning(f"Login failed for email {customer_data.email}: invalid password")
