@@ -49,7 +49,8 @@ def update_customer(db: Session, customer_id: uuid.UUID, customer_update: Custom
         raise ValueError("Customer not found")
 
     update_data = customer_update.dict(exclude_unset=True)
-
+    if "password" in update_data:
+        update_data["password"] = hash_password(update_data["password"])
     for key, value in update_data.items():
         setattr(db_customer, key, value)
     logger.info(f"Updated customer with ID {customer_id} with data: {update_data}")
