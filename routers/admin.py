@@ -54,6 +54,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def update_admins(admin_id: uuid.UUID, admin_update: AdminUpdate, db: Session = Depends(get_db)):
     try:
         updated_admin = update_admin(db=db, admin_id=admin_id, admin_update=admin_update)
+        
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return updated_admin

@@ -77,7 +77,8 @@ def update_admin(db: Session, admin_id: uuid.UUID, admin_update: AdminUpdate):
 
     for key, value in update_data.items():
         setattr(db_admin, key, value)
-
+    if "password" in update_data:
+        db_admin.password = hash_password(update_data["password"])
     db.commit()
     db.refresh(db_admin)
     logger.info(f"Admin with ID {admin_id} updated successfully")
