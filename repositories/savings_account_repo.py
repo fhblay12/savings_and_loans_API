@@ -20,8 +20,13 @@ def create_savings_account_repo(db: Session, account_data:SavingsAccountCreate):
 
         )
     except Exception as e:
-        logger.error(f"Error creating savings account for customer {account_data.customer_id}: {str(e)}")
-        raise ValueError(f"Error creating savings account for customer {account_data.customer_id}: {str(e)}")   
+        try:
+            customer_id = account_data.customer_id
+        except AttributeError:
+            logger.error(f"Missing customer_id: {str(e)}")
+            raise ValueError(f"Error creating savings account for customer: {str(e)}")
+        logger.error(f"Error creating savings account for customer: {str(e)}")
+        raise ValueError(f"Error creating savings account for customer: {str(e)}")   
     
     db.add(new_member)
     db.commit()

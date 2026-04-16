@@ -23,6 +23,5 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     print(f"Stored:   {hashed_password}")
 
     return computed == hashed_password
-    print(pwd_context.verify(_normalize_password(plain_password), hashed_password))
-    return pwd_context.verify(_normalize_password(plain_password), hashed_password)
+ 
 

@@ -13,6 +13,6 @@ pydantic[email]
 python-dateutil
 requests
 python-multipart
-
+pytest
 passlib==1.7.4
 bcrypt==4.1.2
