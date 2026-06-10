@@ -22,8 +22,7 @@ def create_transaction(account_id: uuid.UUID, amount: float, tx_type: str, db: S
     new_transaction = Transactions(
         account_id=account_id,
         amount_to_be_withdrawn_or_added=amount,
-        transaction_type=tx_type.capitalize(),
-        transaction_date=datetime.utcnow()
+        transaction_type=tx_type.capitalize()
     )
     if not new_transaction:
         logger.error(f"Failed to create transaction for account_id: {account_id}.")

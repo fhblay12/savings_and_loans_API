@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from repositories.employment_details_repo import (
     create_employment_details,
@@ -27,6 +27,18 @@ def _make_employment_create(overrides=None):
             setattr(base, k, v)
 
     return base
+from types import SimpleNamespace
+
+def _make_employment_create_invalid():
+    return SimpleNamespace(
+        employer_last_name="Doe",
+        customer_id="cust-1",
+        job_title="Engineer",
+        monthly_income=5000,
+        employment_type="Full-time",
+        employment_start_date="2024-01-01"
+        # ❌ employer_first_name missing → real AttributeError
+    )
 
 
 # ---------------------------------------------------------------------
@@ -49,6 +61,15 @@ class TestEmploymentRepo:
         self.db.refresh.assert_called_once()
 
         assert result.employer_first_name == "John"
+
+   
+
+    def test_create_employment_failure(self):
+        invalid_data = _make_employment_create_invalid()
+
+
+        with pytest.raises(ValueError):
+            create_employment_details(self.db, invalid_data)
 
     # =========================================================
     # UPDATE

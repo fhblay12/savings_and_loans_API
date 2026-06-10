@@ -10,6 +10,9 @@ from repositories.admin_repo import (
     verify_loan,
     get_admin_savings_accounts,
     get_admin_loans,
+    get_admin_unverified_loan,
+    get_admin_unverified_savings_accounts,
+    random_account_administrator
 )
 
 from schemas.admin_schema import AdminCreate, AdminUpdate, LoginRequest
@@ -77,6 +80,24 @@ class TestAdminRepo:
         with pytest.raises(ValueError):
             create_admin(self.db, self.admin_data)
 
+    
+    
+    #`=========================================================
+    # GET RANDOM ADMIN
+    # =========================================================
+    def test_random_admin_selection(self):
+        # Mock multiple admins
+        mock_admin1 = MagicMock()
+        mock_admin1.email = "admin1@example.com"
+        mock_admin1.admin_role = "Account Administrator"
+        mock_admin2 = MagicMock()
+        mock_admin2.email = "admin2@example.com"
+        mock_admin2.admin_role = "Account Administrator"
+        self.db.query.return_value.filter.return_value.all.return_value = [mock_admin1, mock_admin2]
+
+        result = random_account_administrator(self.db)
+
+        assert result in [mock_admin1, mock_admin2]
     # =========================================================
     # LOGIN ADMIN
     # =========================================================
@@ -152,8 +173,8 @@ class TestAdminRepo:
         self.db.query.return_value.filter.return_value.first.return_value = None
 
         # your version returns None instead of raising
-        result = delete_admin(self.db, "fake-id")
-        assert result is None
+        with pytest.raises(ValueError):
+            delete_admin(self.db, "fake-id")
 
     # =========================================================
     # VERIFY ACCOUNT
@@ -175,6 +196,65 @@ class TestAdminRepo:
         with pytest.raises(ValueError):
             verify_account(self.db, ["123"])
 
+    def test_get_admin_savings_accounts_success(self):
+            # Mock customer
+            mock_customer = MagicMock()
+            mock_customer.first_name = "John"
+            mock_customer.last_name = "Doe"
+
+            # Mock account
+            mock_account = MagicMock()
+            mock_account.customer_id = "customer-id"
+            mock_account.customer = mock_customer
+            mock_account.balance = 500.0
+            mock_account.created_date = "2026-01-01"
+            mock_account.admin_id = "admin-id"
+            mock_account.is_verified = True
+
+            # Mock query chain
+            self.db.query.return_value.join.return_value.filter.return_value.all.return_value = [
+                mock_account
+            ]
+
+            result = get_admin_savings_accounts(self.db, "admin-id")
+
+            assert len(result) == 1
+            assert result[0]["owner_first_name"] == "John"
+            assert result[0]["owner_last_name"] == "Doe"
+            assert result[0]["balance"] == 500.0
+            assert result[0]["is_verified"] is True
+    def test_get_admin_savings_accounts_not_found(self):
+        self.db.query.return_value.join.return_value.filter.return_value.all.return_value = []
+        with pytest.raises(ValueError):
+            get_admin_savings_accounts(self.db, "admin-id")
+
+    def test_get_admin_unverified_savings_accounts(self):
+    # Mock customer
+        mock_customer = MagicMock()
+        mock_customer.first_name = "John"
+        mock_customer.last_name = "Doe"
+
+        # Mock account
+        mock_account = MagicMock()
+        mock_account.customer_id = "customer-id"
+        mock_account.customer = mock_customer
+        mock_account.balance = 500.0
+        mock_account.created_date = "2026-01-01"
+        mock_account.admin_id = "admin-id"
+        mock_account.is_verified = False
+
+        # Mock query chain
+        self.db.query.return_value.join.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_account
+        ]
+
+        result = get_admin_unverified_savings_accounts(self.db, "admin-id")
+
+        assert len(result) == 1
+        assert result[0]["owner_first_name"] == "John"
+        assert result[0]["owner_last_name"] == "Doe"
+        assert result[0]["balance"] == 500.0
+        assert result[0]["is_verified"] is False   # ✅ FIX
     # =========================================================
     # VERIFY LOAN
     # =========================================================
@@ -189,10 +269,72 @@ class TestAdminRepo:
         self.db.commit.assert_called_once()
         assert result[0].is_verified is True
 
+    def test_get_admin_loans_success(self):
+        # Mock customer
+        mock_customer = MagicMock()
+        mock_customer.first_name = "John"
+        mock_customer.last_name = "Doe"
+
+        # Mock loan
+        mock_loan = MagicMock()
+        mock_loan.customer_id = "customer-id"
+        mock_loan.customer = mock_customer
+        mock_loan.loan_amount = 1000.0
+        mock_loan.created_date = "2026-01-01"
+        mock_loan.time_of_closure = None
+        mock_loan.is_verified = True
+        mock_loan.loan_status = "approved"   # ✅ REQUIRED (your function uses this)
+
+        # ✅ FIX: correct chain
+        self.db.query.return_value.options.return_value.filter.return_value.all.return_value = [
+            mock_loan
+        ]
+
+        result = get_admin_loans(self.db, "admin-id")
+
+        assert len(result) == 1
+        assert result[0]["owner_first_name"] == "John"
+        assert result[0]["loan_status"] == "approved"
+
+    def test_get_admin_loans_not_found(self):
+        # ✅ Correct chain
+        self.db.query.return_value.options.return_value.filter.return_value.all.return_value = []
+
+        with pytest.raises(ValueError):
+            get_admin_loans(self.db, "admin-id")
+
     def test_verify_loan_not_found(self):
         self.db.query.return_value.filter.return_value.all.return_value = []
 
         with pytest.raises(ValueError):
             verify_loan(self.db, ["loan1"])
+
+    def test_get_admin_unverified_loan_success(self):
+        # Mock customer
+        mock_customer = MagicMock()
+        mock_customer.first_name = "Jane"
+        mock_customer.last_name = "Doe"
+
+        # Mock loan
+        mock_loan = MagicMock()
+        mock_loan.customer_id = "customer-id"
+        mock_loan.customer = mock_customer  # ✅ IMPORTANT (same issue as before)
+        mock_loan.loan_amount = 1000.0
+        mock_loan.created_date = "2026-01-01"
+        mock_loan.is_verified = False
+        mock_loan.admin_id = "admin-id"
+
+        # Mock query chain
+        self.db.query.return_value.join.return_value.filter.return_value.filter.return_value.all.return_value = [
+            mock_loan
+        ]
+
+        result = get_admin_unverified_loan(self.db, "admin-id")
+
+        assert len(result) == 1
+        assert result[0]["owner_first_name"] == "Jane"
+        assert result[0]["owner_last_name"] == "Doe"
+        assert result[0]["loan_amount"] == 1000.0
+        assert result[0]["is_verified"] is False   # ✅ FIX
 
 if __name__ == "__main__":    pytest.main()

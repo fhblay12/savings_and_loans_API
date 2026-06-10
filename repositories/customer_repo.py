@@ -89,7 +89,7 @@ def delete_customer(db: Session, customer_id: uuid.UUID):
 def get_member_by_id(db: Session, customer_id: uuid.UUID):
     user =db.query(Customer).filter(Customer.customer_id == customer_id).first()
     if not user:
-        logger.warning(f"Customer with ID {customer_id} not found")
+        logger.warning(f"Customer not found")
         raise ValueError("Customer not found")
     logger.info(f"Retrieved customer with ID {customer_id}: {user.first_name} {user.last_name}")
     return user

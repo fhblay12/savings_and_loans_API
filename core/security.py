@@ -4,7 +4,6 @@ from jose import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from repositories.admin_repo import get_admin_by_id
 from fastapi.security import APIKeyHeader
 
 api_key_scheme = APIKeyHeader(name="Authorization")
@@ -44,7 +43,7 @@ def get_current_admin(token: str = Depends(api_key_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-def get_current_user(token: str = Depends(api_key_scheme)):
+def  get_current_user(token: str = Depends(api_key_scheme)):
     try:
         if not token.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Invalid auth header")

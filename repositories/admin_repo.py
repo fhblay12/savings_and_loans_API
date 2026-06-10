@@ -105,7 +105,7 @@ def get_admin_savings_accounts(db: Session, admin_id: uuid.UUID):
         .all()
     )
     if not accounts:
-        logger.info(f"No savings accounts found for admin with ID {admin_id}")
+        logger.info(f"No savings accounts found for admin")
         raise ValueError("No savings accounts found for this admin")
     result = []
 
@@ -147,23 +147,14 @@ def get_admin_unverified_savings_accounts(db: Session, admin_id: uuid.UUID):
     return result
 
 
-def get_admin_by_email(db: Session, email: str):
-    return db.query(Admin).filter(Admin.email == email).first()
-
-
-def get_admin_by_id(db: Session, admin_id):
-    return db.query(Admin).filter(Admin.admin_id == admin_id).first()
-
-
-def get_all_admins(db: Session):
-    return db.query(Admin).all()
 
 
 def delete_admin(db: Session, admin_id):
     admin = db.query(Admin).filter(Admin.admin_id == admin_id).first()
 
     if not admin:
-        return None
+        logger.warning(f"Attempted to delete admin with ID {admin_id}, but admin was not found")
+        raise ValueError("Admin not found")
 
     db.delete(admin)
     db.commit()
@@ -178,10 +169,14 @@ def admin_login(db: Session, admin_data: LoginRequest):
     customer = db.query(Admin).filter(Admin.email == admin_data.email).first()
 
     if not customer:
+        logger.warning(f"Login failed for email {admin_data.email}: Admin not found")
+        raise ValueError("Invalid email or password")
         return None
 
     # verify password
     if not verify_password(admin_data.password, admin_data.password):
+        logger.warning(f"Login failed for email {admin_data.email}: Invalid password")
+        raise ValueError("Invalid email or password")   
         return None
 
     return customer

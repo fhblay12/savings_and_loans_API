@@ -21,13 +21,14 @@ from database import engine, Base
 app = FastAPI()
 
 
+
 Base.metadata.create_all(bind=engine)
 
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-app = FastAPI()
+
 
 app.include_router(customer.router)
 app.include_router(employment_details.router)

@@ -5,8 +5,11 @@ from datetime import date
 from repositories.customer_repo import (
     create_customer,
     customer_login,
+    get_member_by_id,
+    get_savings_accounts,
     update_customer,
     delete_customer,
+    get_loans
 )
 
 from schemas.customer_schema import CustomerCreate  # adjust if needed
@@ -98,7 +101,24 @@ class TestCustomerRepo:
 
         with pytest.raises(ValueError):
             customer_login(self.db, self.customer_data)
+    # ================================================================
+    # GET CUSTOMER BY ID
+    #================================================================
+    def test_get_customer_by_id_success(self):
+        mock_customer = MagicMock()
+        self.db.query.return_value.filter.return_value.first.return_value = mock_customer
 
+        result = get_member_by_id(self.db, "fake-id")
+
+        assert result == mock_customer
+
+    def test_get_customer_by_id_not_found(self):
+        self.db.query.return_value.filter.return_value.first.return_value = None
+
+        with pytest.raises(ValueError):
+            get_member_by_id(self.db, "fake-id")
+
+   
     # ================================================================
     # UPDATE CUSTOMER
     # ================================================================
@@ -142,6 +162,36 @@ class TestCustomerRepo:
 
         with pytest.raises(ValueError):
             delete_customer(self.db, "fake-id")
+    
+    # ================================================================
+    # GET LOANS BY CUSTOMER ID
+    # ================================================================
+    def test_get_loans_by_customer_id_success(self):
+        mock_loan = MagicMock()
+        mock_loan.loan_status = "approved"
+        self.db.query.return_value.filter.return_value.all.return_value = [mock_loan]
+
+        result = get_loans(self.db, "customer-id")
+
+        assert len(result) == 1
+
+    def test_get_loans_by_customer_id_not_found(self):
+        self.db.query.return_value.filter.return_value.all.return_value = []
+
+        with pytest.raises(ValueError):
+            get_loans(self.db, "customer-id")
+    
+    # ================================================================
+    # GET SAVINGS ACCOUNTS BY CUSTOMER ID
+    # ================================================================
+    def test_get_savings_accounts_by_customer_id_success(self):
+        mock_account = MagicMock()
+
+        self.db.query.return_value.filter.return_value.first.return_value = mock_account
+
+        result = get_savings_accounts(self.db, "customer-id")
+
+        assert result == mock_account
 
 if __name__ == "__main__":
     pytest.main()
